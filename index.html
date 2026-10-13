@@ -4,10 +4,40 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>calculator-app</title>
+    <title>Calculator</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main class="calculator">
+        <!-- The screen. <output> is the HTML element meant for "result of a calculation". -->
+        <output id="display" class="display" aria-live="polite">0</output>
+
+        <!-- All buttons live in one container so JS can listen to them in one place later. -->
+        <div class="keys">
+          <button type="button" data-action="clear">C</button>
+          <button type="button" data-action="operator" data-value="/" aria-label="divide">÷</button>
+          <button type="button" data-action="operator" data-value="*" aria-label="multiply">×</button>
+          <button type="button" data-action="operator" data-value="-" aria-label="subtract">−</button>
+
+          <button type="button" data-action="digit" data-value="7">7</button>
+          <button type="button" data-action="digit" data-value="8">8</button>
+          <button type="button" data-action="digit" data-value="9">9</button>
+          <button type="button" data-action="operator" data-value="+" aria-label="add">+</button>
+
+          <button type="button" data-action="digit" data-value="4">4</button>
+          <button type="button" data-action="digit" data-value="5">5</button>
+          <button type="button" data-action="digit" data-value="6">6</button>
+
+          <button type="button" data-action="digit" data-value="1">1</button>
+          <button type="button" data-action="digit" data-value="2">2</button>
+          <button type="button" data-action="digit" data-value="3">3</button>
+          <button type="button" data-action="equals">=</button>
+
+          <button type="button" data-action="digit" data-value="0">0</button>
+          <button type="button" data-action="decimal">.</button>
+        </div>
+      </main>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
