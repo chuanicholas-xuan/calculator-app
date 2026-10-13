@@ -67,7 +67,7 @@ function chooseOperator(nextOperator) {
 }
 
 function equals() {
-  if (state.operator === null || state.waitingForNext) return
+  if (state.operator === null) return // "5 + =" uses 5 twice, like a real calculator: 10
 
   const result = format(calculate(state.previous, Number(state.current), state.operator))
   reset(result)
@@ -87,6 +87,23 @@ function deleteLast() {
   if (state.current === '-') state.current = '0'
 }
 
+// Percent acts on the number on screen, not between two numbers, so it is not an operator.
+// After + or -, it means "this percent OF the previous number": 200 + 10 % -> 200 + 20.
+// Everywhere else it just divides by 100: 50 % -> 0.5, and 200 x 10 % -> 200 x 0.1.
+function percent() {
+  if (state.current === 'Error') return
+
+  const value = Number(state.current)
+  const isAddOrSubtract = state.operator === '+' || state.operator === '-'
+
+  if (isAddOrSubtract && state.previous !== null) {
+    state.current = format((state.previous * value) / 100)
+  } else {
+    state.current = format(value / 100)
+  }
+  state.waitingForNext = true // the next digit starts a fresh number
+}
+
 // ---------- One entry point for every input, whether it came from a click or a key ----------
 function handle(action, value) {
   if (action === 'digit') inputDigit(value)
@@ -95,6 +112,7 @@ function handle(action, value) {
   else if (action === 'equals') equals()
   else if (action === 'clear') reset()
   else if (action === 'delete') deleteLast()
+  else if (action === 'percent') percent()
 
   render()
 }
@@ -114,6 +132,7 @@ const KEY_MAP = {
   '*': ['operator', '*'],
   x: ['operator', '*'],
   '/': ['operator', '/'],
+  '%': ['percent'],
   '.': ['decimal'],
   ',': ['decimal'],
   Enter: ['equals'],
