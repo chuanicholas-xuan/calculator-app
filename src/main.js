@@ -81,21 +81,78 @@ function reset(screen = '0') {
   state.waitingForNext = false
 }
 
-// ---------- Wiring: one listener on the container handles every button ----------
-keys.addEventListener('click', (event) => {
-  const button = event.target.closest('button')
-  if (!button) return // clicked the gap between buttons
+function deleteLast() {
+  if (state.waitingForNext || state.current === 'Error') return
+  state.current = state.current.length > 1 ? state.current.slice(0, -1) : '0'
+  if (state.current === '-') state.current = '0'
+}
 
-  const { action, value } = button.dataset
-
+// ---------- One entry point for every input, whether it came from a click or a key ----------
+function handle(action, value) {
   if (action === 'digit') inputDigit(value)
   else if (action === 'decimal') inputDecimal()
   else if (action === 'operator') chooseOperator(value)
   else if (action === 'equals') equals()
   else if (action === 'clear') reset()
+  else if (action === 'delete') deleteLast()
 
   render()
+}
+
+// ---------- Mouse: one listener on the container handles every button ----------
+keys.addEventListener('click', (event) => {
+  const button = event.target.closest('button')
+  if (!button) return // clicked the gap between buttons
+
+  handle(button.dataset.action, button.dataset.value)
 })
+
+// ---------- Keyboard: translate a key into the same action a button would send ----------
+const KEY_MAP = {
+  '+': ['operator', '+'],
+  '-': ['operator', '-'],
+  '*': ['operator', '*'],
+  x: ['operator', '*'],
+  '/': ['operator', '/'],
+  '.': ['decimal'],
+  ',': ['decimal'],
+  Enter: ['equals'],
+  '=': ['equals'],
+  Escape: ['clear'],
+  c: ['clear'],
+  Backspace: ['delete'],
+}
+
+function keyToAction(key) {
+  if (key >= '0' && key <= '9' && key.length === 1) return ['digit', key]
+  return KEY_MAP[key] ?? KEY_MAP[key.toLowerCase()] ?? null
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.ctrlKey || event.metaKey || event.altKey) return // leave shortcuts like Ctrl+C alone
+
+  const mapped = keyToAction(event.key)
+  if (!mapped) return
+
+  // Stops Enter from also "clicking" whichever button has focus, and "/" from opening quick-find.
+  event.preventDefault()
+
+  const [action, value] = mapped
+  handle(action, value)
+  flash(action, value)
+})
+
+// Briefly highlight the on-screen button that matches the key, so it feels like it was pressed.
+function flash(action, value) {
+  const selector = value
+    ? `[data-action="${action}"][data-value="${value}"]`
+    : `[data-action="${action}"]`
+  const button = keys.querySelector(selector)
+  if (!button) return
+
+  button.classList.add('pressed')
+  setTimeout(() => button.classList.remove('pressed'), 100)
+}
 
 // textContent (not innerHTML) so the screen can only ever show text, never run HTML.
 function render() {
