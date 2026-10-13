@@ -37,16 +37,43 @@ body {
   border-radius: 24px;
 }
 
-/* The screen: right-aligned like a real calculator; long numbers shrink instead of overflowing. */
+/* The screen: two lines, the sum on top and the answer below. Right-aligned like a real calculator. */
 .display {
-  display: block;
-  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 4px;
+  min-height: 120px;
   padding: 12px 8px;
   margin-bottom: 16px;
   color: var(--text);
-  font-size: 3rem;
   text-align: right;
-  overflow-wrap: anywhere;
+  overflow-wrap: anywhere; /* long sums wrap instead of overflowing */
+}
+
+/* While typing: the sum is big, the live answer is small and grey. */
+.expression {
+  font-size: 2.5rem;
+  transition: font-size 0.15s, color 0.15s;
+}
+
+.result {
+  min-height: 1.5em; /* keeps the layout from jumping when there is no preview */
+  font-size: 1.5rem;
+  color: var(--function);
+  transition: font-size 0.15s, color 0.15s;
+}
+
+/* After =, they swap: the sum becomes small and grey, the answer big and white. */
+.display.done .expression {
+  font-size: 1.5rem;
+  color: var(--function);
+}
+
+.display.done .result {
+  font-size: 3rem;
+  color: var(--text);
 }
 
 /* 4 equal columns. Buttons fill the grid left-to-right, top-to-bottom. */
@@ -98,14 +125,9 @@ body {
   color: var(--text-dark);
 }
 
-/* Bigger buttons: = is two rows tall, 0 is two columns wide. */
+/* = is two rows tall. */
 .keys [data-action="equals"] {
   grid-row: span 2;
-  aspect-ratio: auto;
-}
-
-.keys [data-value="0"] {
-  grid-column: span 2;
   aspect-ratio: auto;
 }
 

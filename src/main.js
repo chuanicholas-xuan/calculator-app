@@ -1,30 +1,56 @@
 import './style.css'
 
-// ---------- State: everything the calculator needs to remember ----------
+// ---------- State: the whole sum is kept as a list of pieces (tokens) ----------
+// "12 + 7 × 3" is stored as ['12', '+', '7', '*', '3'].
+// Numbers stay as text while you type them, so "0." and "1.50" survive.
 const state = {
-  current: '0', // the number on the screen, kept as text so "0." and "007" behave
-  previous: null, // the number entered before the operator
-  operator: null, // '+', '-', '*' or '/'
-  waitingForNext: false, // true right after an operator or =, so the next digit starts a new number
+  tokens: [],
+  justEvaluated: false, // true right after =, so the next key knows to start fresh or continue from the answer
+  result: '', // the answer shown after =
 }
 
 const MAX_DIGITS = 12
+const OPERATORS = ['+', '-', '*', '/']
+const SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' } // what humans see vs what the code uses
 
 const display = document.getElementById('display')
+const expressionEl = document.getElementById('expression')
+const resultEl = document.getElementById('result')
 const keys = document.querySelector('.keys')
 
+// ---------- Small helpers ----------
+const isOperator = (token) => OPERATORS.includes(token)
+const lastToken = () => state.tokens[state.tokens.length - 1]
+const setLastToken = (value) => (state.tokens[state.tokens.length - 1] = value)
+
 // ---------- Pure maths: no DOM here, so it is easy to test ----------
-function calculate(a, b, operator) {
-  switch (operator) {
-    case '+':
-      return a + b
-    case '-':
-      return a - b
-    case '*':
-      return a * b
-    case '/':
-      return b === 0 ? null : a / b // null means "can't divide by zero"
+// Works out the sum with the normal maths rules: × and ÷ before + and −.
+// Returns a number, or null for "can't be done" (dividing by zero).
+function evaluate(tokens) {
+  if (tokens.length === 0) return 0
+  if (isOperator(tokens[tokens.length - 1])) tokens = tokens.slice(0, -1) // ignore a trailing "+"
+
+  // Pass 1: do every × and ÷ from left to right, leaving only + and −.
+  const terms = [Number(tokens[0])]
+  for (let i = 1; i < tokens.length; i += 2) {
+    const operator = tokens[i]
+    const number = Number(tokens[i + 1])
+
+    if (operator === '*') terms[terms.length - 1] *= number
+    else if (operator === '/') {
+      if (number === 0) return null
+      terms[terms.length - 1] /= number
+    } else {
+      terms.push(operator, number)
+    }
   }
+
+  // Pass 2: do the + and − from left to right.
+  let total = terms[0]
+  for (let i = 1; i < terms.length; i += 2) {
+    total = terms[i] === '+' ? total + terms[i + 1] : total - terms[i + 1]
+  }
+  return total
 }
 
 // 0.1 + 0.2 is 0.30000000000000004 in JavaScript. Rounding to 12 significant digits hides that.
@@ -33,75 +59,96 @@ function format(result) {
   return String(Number.parseFloat(result.toPrecision(MAX_DIGITS)))
 }
 
+// After =, the next key either starts a new sum (a digit) or continues from the answer (an operator).
+function startFresh(keepAnswer) {
+  const answer = state.result
+  state.tokens = keepAnswer && answer !== 'Error' ? [answer] : []
+  state.justEvaluated = false
+  state.result = ''
+}
+
 // ---------- Actions: one function per kind of button ----------
 function inputDigit(digit) {
-  if (state.waitingForNext || state.current === 'Error') {
-    state.current = digit
-    state.waitingForNext = false
-  } else if (state.current.replace(/[-.]/g, '').length < MAX_DIGITS) {
-    state.current = state.current === '0' ? digit : state.current + digit
+  if (state.justEvaluated) startFresh(false)
+
+  const last = lastToken()
+  if (last === undefined || isOperator(last)) {
+    state.tokens.push(digit)
+  } else if (last.replace(/[-.]/g, '').length < MAX_DIGITS) {
+    setLastToken(last === '0' ? digit : last + digit)
   }
 }
 
 function inputDecimal() {
-  if (state.waitingForNext || state.current === 'Error') {
-    state.current = '0.'
-    state.waitingForNext = false
-  } else if (!state.current.includes('.')) {
-    state.current += '.'
-  }
+  if (state.justEvaluated) startFresh(false)
+
+  const last = lastToken()
+  if (last === undefined || isOperator(last)) state.tokens.push('0.')
+  else if (!last.includes('.')) setLastToken(last + '.')
 }
 
-function chooseOperator(nextOperator) {
-  if (state.current === 'Error') return
-
-  // Pressing 5 + 3 - should first work out 5 + 3 = 8, then continue with "8 -".
-  if (state.operator && !state.waitingForNext) {
-    state.current = format(calculate(state.previous, Number(state.current), state.operator))
-    if (state.current === 'Error') return reset('Error')
+function chooseOperator(operator) {
+  if (state.justEvaluated) {
+    if (state.result === 'Error') return
+    startFresh(true)
   }
 
-  state.previous = Number(state.current)
-  state.operator = nextOperator
-  state.waitingForNext = true
+  const last = lastToken()
+  if (last === undefined) state.tokens.push('0', operator) // pressing + first means "0 +"
+  else if (isOperator(last)) setLastToken(operator) // pressing + then × swaps the operator
+  else state.tokens.push(operator)
 }
 
 function equals() {
-  if (state.operator === null) return // "5 + =" uses 5 twice, like a real calculator: 10
+  if (state.tokens.length === 0 || state.justEvaluated) return
+  if (isOperator(lastToken())) state.tokens.pop() // "5 +" then = just means "5"
 
-  const result = format(calculate(state.previous, Number(state.current), state.operator))
-  reset(result)
-  state.waitingForNext = true
+  state.result = format(evaluate(state.tokens))
+  state.justEvaluated = true
 }
 
-function reset(screen = '0') {
-  state.current = screen
-  state.previous = null
-  state.operator = null
-  state.waitingForNext = false
-}
-
+// Backspace: remove one character. After =, it clears everything.
 function deleteLast() {
-  if (state.waitingForNext || state.current === 'Error') return
-  state.current = state.current.length > 1 ? state.current.slice(0, -1) : '0'
-  if (state.current === '-') state.current = '0'
+  if (state.justEvaluated) return reset()
+
+  const last = lastToken()
+  if (last === undefined) return
+  if (isOperator(last) || last.length === 1 || last === '-0' || /^-\d$/.test(last)) {
+    state.tokens.pop()
+  } else {
+    setLastToken(last.slice(0, -1))
+  }
 }
 
-// Percent acts on the number on screen, not between two numbers, so it is not an operator.
-// After + or -, it means "this percent OF the previous number": 200 + 10 % -> 200 + 20.
-// Everywhere else it just divides by 100: 50 % -> 0.5, and 200 x 10 % -> 200 x 0.1.
+// Percent acts on the number you are typing, not between two numbers, so it is not an operator.
+// After + or −, it means "this percent OF everything before it": 200 + 10 % -> 200 + 20.
+// Everywhere else it just divides by 100: 50 % -> 0.5, and 200 × 10 % -> 200 × 0.1.
 function percent() {
-  if (state.current === 'Error') return
+  if (state.justEvaluated) startFresh(true)
 
-  const value = Number(state.current)
-  const isAddOrSubtract = state.operator === '+' || state.operator === '-'
+  const last = lastToken()
+  if (last === undefined || isOperator(last)) return
 
-  if (isAddOrSubtract && state.previous !== null) {
-    state.current = format((state.previous * value) / 100)
+  const value = Number(last)
+  const before = state.tokens.slice(0, -2) // everything before "+ 10"
+  const operator = state.tokens[state.tokens.length - 2]
+
+  if ((operator === '+' || operator === '-') && before.length > 0) {
+    const base = evaluate(before)
+    setLastToken(format(base === null ? null : (base * value) / 100))
   } else {
-    state.current = format(value / 100)
+    setLastToken(format(value / 100))
   }
-  state.waitingForNext = true // the next digit starts a fresh number
+  if (lastToken() === 'Error') {
+    state.result = 'Error'
+    state.justEvaluated = true
+  }
+}
+
+function reset() {
+  state.tokens = []
+  state.justEvaluated = false
+  state.result = ''
 }
 
 // ---------- One entry point for every input, whether it came from a click or a key ----------
@@ -140,6 +187,7 @@ const KEY_MAP = {
   Escape: ['clear'],
   c: ['clear'],
   Backspace: ['delete'],
+  Delete: ['delete'],
 }
 
 function keyToAction(key) {
@@ -173,9 +221,32 @@ function flash(action, value) {
   setTimeout(() => button.classList.remove('pressed'), 100)
 }
 
+// ---------- Drawing the screen from state ----------
+// Top line: the sum ("12 + 7"). Bottom line: the answer.
+// While typing, the sum is big and a live preview of the answer is small.
+// After =, they swap: the answer is big and the sum is small.
+function expressionText() {
+  if (state.tokens.length === 0) return '0'
+  return state.tokens.map((token) => SYMBOLS[token] ?? token).join(' ')
+}
+
+function previewText() {
+  const hasOperator = state.tokens.some(isOperator)
+  if (!hasOperator || isOperator(lastToken())) return ''
+  const preview = format(evaluate(state.tokens))
+  return preview === 'Error' ? '' : preview
+}
+
 // textContent (not innerHTML) so the screen can only ever show text, never run HTML.
 function render() {
-  display.textContent = state.current
+  if (state.justEvaluated) {
+    expressionEl.textContent = state.tokens.length ? `${expressionText()} =` : ''
+    resultEl.textContent = state.result
+  } else {
+    expressionEl.textContent = expressionText()
+    resultEl.textContent = previewText()
+  }
+  display.classList.toggle('done', state.justEvaluated)
 }
 
 render()
