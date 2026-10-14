@@ -32,7 +32,7 @@ body {
 }
 
 .calculator {
-  position: relative; /* lets the history screen sit exactly on top of it */
+  position: relative; /* lets the history and settings screens sit exactly on top of it */
   width: min(360px, 100vw - 32px);
   padding: 20px;
   background: var(--bg);
@@ -142,8 +142,13 @@ body {
 /* ---------- History ---------- */
 .toolbar {
   display: flex;
-  justify-content: space-between; /* clock on the left, sci on the right */
   align-items: center;
+  gap: 4px;
+}
+
+/* Pushes the sci button to the right; the clock and gear stay on the left. */
+.toolbar .mode-button {
+  margin-left: auto;
 }
 
 /* Round, see-through buttons for the clock, back arrow and bin icons. */
@@ -175,10 +180,11 @@ body {
   background: none;
 }
 
-/* Covers the whole calculator, like a new screen sliding in. */
-.history {
+/* History and Settings are "panels": they cover the whole calculator, like a new screen sliding in. */
+.panel {
   position: absolute;
   inset: 0;
+  z-index: 1; /* always on top of the buttons */
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -188,19 +194,19 @@ body {
 }
 
 /* display: flex above would beat the "hidden" attribute, so say it again here. */
-.history[hidden] {
+.panel[hidden] {
   display: none;
 }
 
 /* Back arrow | title | bin, with the title centred. */
-.history-header {
+.panel-header {
   display: grid;
   grid-template-columns: 40px 1fr 40px;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.history-header h2 {
+.panel-header h2 {
   margin: 0;
   font-size: 1.25rem;
   text-align: center;
@@ -324,4 +330,76 @@ body {
 
 .calculator.scientific .keys [data-action="equals"] {
   aspect-ratio: auto;
+}
+
+/* ---------- Settings ---------- */
+.settings-label {
+  margin: 8px 4px 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Two theme cards per row. */
+.theme-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--key);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.theme-card:hover {
+  background: var(--key-hover);
+}
+
+.theme-card:focus-visible {
+  outline: 3px solid var(--operator);
+  outline-offset: 2px;
+}
+
+/* aria-pressed="true" marks the theme that is switched on. */
+.theme-card[aria-pressed="true"] {
+  border-color: var(--operator);
+}
+
+/* A tiny picture of each theme, drawn with gradients instead of images. */
+.swatch {
+  height: 64px;
+  border-radius: 10px;
+}
+
+.swatch-classic {
+  background: linear-gradient(135deg, #1c1c1e 55%, #ff9f0a 55%);
+}
+
+.swatch-glass {
+  background: radial-gradient(circle at 25% 30%, #7b5cff, transparent 60%),
+    radial-gradient(circle at 80% 80%, #ff5fa2, transparent 55%), #0b0820;
+}
+
+.swatch-bold {
+  background: linear-gradient(135deg, #ffe14d 50%, #ff5c39 50% 70%, #7ad3ff 70%);
+  border: 2px solid #111;
+}
+
+.swatch-neon {
+  background: radial-gradient(circle at 70% 70%, #22e4c4, transparent 45%), #080c18;
+}
+
+.swatch-daylight {
+  background: linear-gradient(135deg, #ffffff 55%, #3b6cff 55%);
+  border: 1px solid #d5dbe6;
 }
