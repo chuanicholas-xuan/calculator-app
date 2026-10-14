@@ -6,6 +6,7 @@ import FinanceConverter from './converters/FinanceConverter.jsx'
 import DateConverter from './converters/DateConverter.jsx'
 import DiscountConverter from './converters/DiscountConverter.jsx'
 import NumeralConverter from './converters/NumeralConverter.jsx'
+import BmiConverter from './converters/BmiConverter.jsx'
 import { UNIT_CONVERTERS } from '../core/units.js'
 
 // The tiles on the converter's home grid, in the same order as the phone's screen.
@@ -26,7 +27,7 @@ const TILES = [
   { key: 'bmi', icon: '🩺', name: 'BMI' },
 ]
 
-// Which component draws each converter. Tiles not listed here aren't rebuilt in React yet.
+// Which component draws each converter.
 // Every unit converter (length, mass, ...) uses the same UnitConverter screen.
 const SCREENS = {
   currency: CurrencyConverter,
@@ -34,6 +35,7 @@ const SCREENS = {
   date: DateConverter,
   discount: DiscountConverter,
   numeral: NumeralConverter,
+  bmi: BmiConverter,
   ...Object.fromEntries(Object.keys(UNIT_CONVERTERS).map((kind) => [kind, UnitConverter])),
 }
 
@@ -70,10 +72,9 @@ export default function ConverterPanel({ onClose }) {
       ) : (
         <div id="converter-home" className="converter-grid">
           {TILES.map(({ key, icon, name }) => (
-            <button type="button" className="converter-tile" data-converter={key} key={key} disabled={!SCREENS[key]} onClick={() => setOpen(key)}>
+            <button type="button" className="converter-tile" data-converter={key} key={key} onClick={() => setOpen(key)}>
               <span className="tile-icon" aria-hidden="true">{icon}</span>
               {name}
-              {!SCREENS[key] && <small>Soon</small>}
             </button>
           ))}
         </div>
