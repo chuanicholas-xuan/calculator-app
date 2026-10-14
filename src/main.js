@@ -1,4 +1,5 @@
 import './style.css'
+import './themes.css'
 
 // ---------- State: the whole sum is kept as a list of pieces (tokens) ----------
 // "12 + sin(30) × 2" is stored as ['12', '+', 'sin', '30', ')', '*', '2'].
@@ -51,6 +52,11 @@ const historyList = document.getElementById('history-list')
 const historyOpenButton = document.getElementById('history-open')
 const historyCloseButton = document.getElementById('history-close')
 const historyClearButton = document.getElementById('history-clear')
+
+const settingsPanel = document.getElementById('settings')
+const settingsOpenButton = document.getElementById('settings-open')
+const settingsCloseButton = document.getElementById('settings-close')
+const themeList = document.getElementById('theme-list')
 
 // ---------- Small helpers: what kind of token is this? ----------
 const isOperator = (token) => OPERATORS.includes(token)
@@ -439,9 +445,13 @@ function keyToAction(key) {
 document.addEventListener('keydown', (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey) return // leave shortcuts like Ctrl+C alone
 
-  // While the history screen is open, the number keys should not type into the hidden calculator.
+  // While History or Settings is open, the number keys should not type into the hidden calculator.
   if (!historyPanel.hidden) {
     if (event.key === 'Escape') closeHistory()
+    return
+  }
+  if (!settingsPanel.hidden) {
+    if (event.key === 'Escape') closeSettings()
     return
   }
 
@@ -611,5 +621,52 @@ historyList.addEventListener('click', (event) => {
   render()
   closeHistory()
 })
+
+// ---------- Settings: themes ----------
+// The theme is just an attribute on <html>, like <html data-theme="neon">.
+// themes.css has rules that only apply when that attribute matches, so changing
+// one attribute restyles the whole app. No colours are set from JavaScript.
+const THEMES = ['classic', 'glass', 'bold', 'neon', 'daylight']
+const THEME_KEY = 'calculator-theme'
+
+function applyTheme(name) {
+  // Storage can be edited by hand, so only accept a name we know. Anything else means Classic.
+  const theme = THEMES.includes(name) ? name : 'classic'
+  document.documentElement.dataset.theme = theme
+
+  for (const card of themeList.querySelectorAll('[data-theme-option]')) {
+    card.setAttribute('aria-pressed', String(card.dataset.themeOption === theme))
+  }
+
+  try {
+    localStorage.setItem(THEME_KEY, theme)
+  } catch {
+    // Storage blocked: the theme still works until the page is closed.
+  }
+}
+
+themeList.addEventListener('click', (event) => {
+  const card = event.target.closest('[data-theme-option]')
+  if (card) applyTheme(card.dataset.themeOption)
+})
+
+function openSettings() {
+  settingsPanel.hidden = false
+  settingsCloseButton.focus()
+}
+
+function closeSettings() {
+  settingsPanel.hidden = true
+  settingsOpenButton.focus()
+}
+
+settingsOpenButton.addEventListener('click', openSettings)
+settingsCloseButton.addEventListener('click', closeSettings)
+
+try {
+  applyTheme(localStorage.getItem(THEME_KEY))
+} catch {
+  applyTheme('classic')
+}
 
 render()
