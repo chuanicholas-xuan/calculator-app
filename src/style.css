@@ -516,6 +516,34 @@ body {
   border-radius: 8px;
 }
 
+/* The amount box, with room for a ± button on its left when one is needed. */
+.amount-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sign-button {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--key-hover);
+  color: var(--text);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.sign-button[hidden] {
+  display: none;
+}
+
+.sign-button:focus-visible {
+  outline: 3px solid var(--operator);
+  outline-offset: 2px;
+}
+
 .convert-swap {
   align-self: center;
   width: 44px;
