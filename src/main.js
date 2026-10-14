@@ -18,6 +18,12 @@ const expressionEl = document.getElementById('expression')
 const resultEl = document.getElementById('result')
 const keys = document.querySelector('.keys')
 
+const historyPanel = document.getElementById('history')
+const historyList = document.getElementById('history-list')
+const historyOpenButton = document.getElementById('history-open')
+const historyCloseButton = document.getElementById('history-close')
+const historyClearButton = document.getElementById('history-clear')
+
 // ---------- Small helpers ----------
 const isOperator = (token) => OPERATORS.includes(token)
 const lastToken = () => state.tokens[state.tokens.length - 1]
@@ -105,6 +111,11 @@ function equals() {
 
   state.result = format(evaluate(state.tokens))
   state.justEvaluated = true
+
+  // Only real sums go in the history: "5 =" or a sum that ended in Error is not worth keeping.
+  if (state.tokens.some(isOperator) && state.result !== 'Error') {
+    addToHistory(expressionText(), state.result)
+  }
 }
 
 // Backspace: remove one character. After =, it clears everything.
@@ -198,6 +209,12 @@ function keyToAction(key) {
 document.addEventListener('keydown', (event) => {
   if (event.ctrlKey || event.metaKey || event.altKey) return // leave shortcuts like Ctrl+C alone
 
+  // While the history screen is open, the number keys should not type into the hidden calculator.
+  if (!historyPanel.hidden) {
+    if (event.key === 'Escape') closeHistory()
+    return
+  }
+
   const mapped = keyToAction(event.key)
   if (!mapped) return
 
@@ -248,5 +265,116 @@ function render() {
   }
   display.classList.toggle('done', state.justEvaluated)
 }
+
+// ---------- History: past sums, saved in the browser so they survive a refresh ----------
+// localStorage is a small notebook the browser keeps for this website. It only stores text,
+// so the list is turned into JSON text to save it, and back into a list to read it.
+const HISTORY_KEY = 'calculator-history'
+const MAX_HISTORY = 100 // keep the newest 100 so the notebook never grows forever
+
+// Anything could be in storage (an older version of the app, or someone editing it by hand
+// in DevTools), so check every entry instead of trusting it.
+function loadHistory() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY))
+    if (!Array.isArray(saved)) return []
+    return saved.filter(
+      (entry) =>
+        typeof entry?.expression === 'string' &&
+        typeof entry?.result === 'string' &&
+        Number.isFinite(entry?.time),
+    )
+  } catch {
+    return [] // broken JSON, or storage is blocked (some private windows do this)
+  }
+}
+
+function saveHistory() {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(historyEntries))
+  } catch {
+    // Storage full or blocked: the history still works until the page is closed.
+  }
+}
+
+let historyEntries = loadHistory() // newest first
+
+function addToHistory(expression, result) {
+  historyEntries.unshift({ expression, result, time: Date.now() })
+  historyEntries = historyEntries.slice(0, MAX_HISTORY)
+  saveHistory()
+}
+
+// Builds the list with createElement + textContent. Saved text is never treated as HTML,
+// so a booby-trapped entry like "<img onerror=...>" just shows up as harmless text.
+function renderHistory() {
+  historyList.replaceChildren() // empty the list before drawing it again
+  historyClearButton.disabled = historyEntries.length === 0
+
+  if (historyEntries.length === 0) {
+    const empty = document.createElement('p')
+    empty.className = 'history-empty'
+    empty.textContent = 'No history yet'
+    historyList.append(empty)
+    return
+  }
+
+  // Entries are newest first, so a new date heading starts whenever the day changes.
+  let currentDay = ''
+  let group
+  for (const entry of historyEntries) {
+    const day = new Date(entry.time).toLocaleDateString() // 14/10/2026 or 10/14/2026, by your computer's settings
+    if (day !== currentDay) {
+      currentDay = day
+      group = document.createElement('section')
+      group.className = 'history-day'
+      const heading = document.createElement('h3')
+      heading.textContent = day
+      group.append(heading)
+      historyList.append(group)
+    }
+
+    const item = document.createElement('button')
+    item.type = 'button'
+    item.className = 'history-item'
+    item.dataset.result = entry.result
+    item.textContent = `${entry.expression} = ${entry.result}`
+    group.append(item)
+  }
+}
+
+function openHistory() {
+  renderHistory()
+  historyPanel.hidden = false
+  historyCloseButton.focus() // keyboard users land inside the panel
+}
+
+function closeHistory() {
+  historyPanel.hidden = true
+  historyOpenButton.focus()
+}
+
+historyOpenButton.addEventListener('click', openHistory)
+historyCloseButton.addEventListener('click', closeHistory)
+
+historyClearButton.addEventListener('click', () => {
+  // Deleting can't be undone, so ask first.
+  if (!confirm('Clear all history?')) return
+  historyEntries = []
+  saveHistory()
+  renderHistory()
+})
+
+// Tapping an old sum brings its answer back so you can keep calculating with it.
+historyList.addEventListener('click', (event) => {
+  const item = event.target.closest('.history-item')
+  if (!item || !Number.isFinite(Number(item.dataset.result))) return
+
+  state.tokens = [item.dataset.result]
+  state.justEvaluated = false
+  state.result = ''
+  render()
+  closeHistory()
+})
 
 render()
