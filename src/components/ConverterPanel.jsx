@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { BackIcon } from './icons.jsx'
 import CurrencyConverter from './converters/CurrencyConverter.jsx'
+import UnitConverter from './converters/UnitConverter.jsx'
+import { UNIT_CONVERTERS } from '../core/units.js'
 
 // The tiles on the converter's home grid, in the same order as the phone's screen.
 const TILES = [
@@ -21,8 +23,10 @@ const TILES = [
 ]
 
 // Which component draws each converter. Tiles not listed here aren't rebuilt in React yet.
+// Every unit converter (length, mass, ...) uses the same UnitConverter screen.
 const SCREENS = {
   currency: CurrencyConverter,
+  ...Object.fromEntries(Object.keys(UNIT_CONVERTERS).map((kind) => [kind, UnitConverter])),
 }
 
 export default function ConverterPanel({ onClose }) {
@@ -53,7 +57,8 @@ export default function ConverterPanel({ onClose }) {
       </header>
 
       {Screen ? (
-        <Screen />
+        // key={open}: a new converter gets a fresh screen, instead of Length's numbers leaking into Mass.
+        <Screen key={open} kind={open} />
       ) : (
         <div id="converter-home" className="converter-grid">
           {TILES.map(({ key, icon, name }) => (
