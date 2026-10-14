@@ -3,6 +3,7 @@ import { BackIcon } from './icons.jsx'
 import CurrencyConverter from './converters/CurrencyConverter.jsx'
 import UnitConverter from './converters/UnitConverter.jsx'
 import FinanceConverter from './converters/FinanceConverter.jsx'
+import DateConverter from './converters/DateConverter.jsx'
 import { UNIT_CONVERTERS } from '../core/units.js'
 
 // The tiles on the converter's home grid, in the same order as the phone's screen.
@@ -28,6 +29,7 @@ const TILES = [
 const SCREENS = {
   currency: CurrencyConverter,
   finance: FinanceConverter,
+  date: DateConverter,
   ...Object.fromEntries(Object.keys(UNIT_CONVERTERS).map((kind) => [kind, UnitConverter])),
 }
 
