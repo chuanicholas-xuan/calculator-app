@@ -160,8 +160,8 @@
             <button type="button" class="converter-tile" data-converter="volume">
               <span class="tile-icon" aria-hidden="true">🧊</span>Volume
             </button>
-            <button type="button" class="converter-tile" data-converter="numeral" disabled>
-              <span class="tile-icon" aria-hidden="true">🔢</span>Numeral system<small>Soon</small>
+            <button type="button" class="converter-tile" data-converter="numeral">
+              <span class="tile-icon" aria-hidden="true">🔢</span>Numeral system
             </button>
             <button type="button" class="converter-tile" data-converter="speed">
               <span class="tile-icon" aria-hidden="true">🚀</span>Speed
@@ -336,6 +336,43 @@
               <div>
                 <dt>You save</dt>
                 <dd id="discount-saved">–</dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Numeral system: one whole number shown in binary, octal, decimal and hexadecimal. -->
+          <div id="numeral-view" class="convert" hidden>
+            <div class="convert-row">
+              <label for="numeral-base">Type the number in</label>
+              <select id="numeral-base">
+                <option value="2">Binary (base 2)</option>
+                <option value="8">Octal (base 8)</option>
+                <option value="10" selected>Decimal (base 10)</option>
+                <option value="16">Hexadecimal (base 16)</option>
+              </select>
+            </div>
+
+            <div class="convert-row">
+              <label for="numeral-input">Number</label>
+              <input id="numeral-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" value="255" />
+            </div>
+
+            <dl class="results results-single numbers" aria-live="polite">
+              <div>
+                <dt>Binary</dt>
+                <dd id="numeral-2">–</dd>
+              </div>
+              <div>
+                <dt>Octal</dt>
+                <dd id="numeral-8">–</dd>
+              </div>
+              <div>
+                <dt>Decimal</dt>
+                <dd id="numeral-10">–</dd>
+              </div>
+              <div>
+                <dt>Hexadecimal</dt>
+                <dd id="numeral-16">–</dd>
               </div>
             </dl>
           </div>

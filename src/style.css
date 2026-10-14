@@ -647,3 +647,13 @@ body {
 [data-theme="daylight"] .convert input[type="date"] {
   color-scheme: light;
 }
+
+/* One answer per row, for long answers like binary numbers. */
+.results.results-single {
+  grid-template-columns: 1fr;
+}
+
+/* Digits all the same width, so long numbers are easier to read. */
+.results.numbers dd {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
