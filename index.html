@@ -25,6 +25,15 @@
               <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
             </svg>
           </button>
+          <button type="button" id="converter-open" class="icon-button" aria-label="Converter">
+            <!-- Two arrows going opposite ways: the usual "convert" icon. -->
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M7 4L3 8l4 4" />
+              <path d="M3 8h14" />
+              <path d="M17 20l4-4-4-4" />
+              <path d="M21 16H7" />
+            </svg>
+          </button>
           <!-- Switches the extra scientific buttons on and off. aria-pressed tells screen readers if it is on. -->
           <button type="button" id="mode-toggle" class="mode-button" aria-pressed="false">sci</button>
         </div>
@@ -105,6 +114,85 @@
             </button>
           </header>
           <div id="history-list" class="history-list"></div>
+        </section>
+
+        <!-- The converter: a grid of converters, and one screen per converter (only Currency so far). -->
+        <section id="converter" class="panel" aria-labelledby="converter-title" hidden>
+          <header class="panel-header">
+            <button type="button" id="converter-close" class="icon-button" aria-label="Back">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 id="converter-title">Converter</h2>
+            <span></span>
+          </header>
+
+          <div id="converter-home" class="converter-grid">
+            <button type="button" class="converter-tile" data-converter="currency">
+              <span class="tile-icon" aria-hidden="true">💱</span>Currency
+            </button>
+            <button type="button" class="converter-tile" data-converter="length" disabled>
+              <span class="tile-icon" aria-hidden="true">📏</span>Length<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="mass" disabled>
+              <span class="tile-icon" aria-hidden="true">⚖️</span>Mass<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="area" disabled>
+              <span class="tile-icon" aria-hidden="true">⬛</span>Area<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="time" disabled>
+              <span class="tile-icon" aria-hidden="true">⏱️</span>Time<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="finance" disabled>
+              <span class="tile-icon" aria-hidden="true">💰</span>Finance<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="data" disabled>
+              <span class="tile-icon" aria-hidden="true">💾</span>Data<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="date" disabled>
+              <span class="tile-icon" aria-hidden="true">📅</span>Date<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="discount" disabled>
+              <span class="tile-icon" aria-hidden="true">🏷️</span>Discount<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="volume" disabled>
+              <span class="tile-icon" aria-hidden="true">🧊</span>Volume<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="numeral" disabled>
+              <span class="tile-icon" aria-hidden="true">🔢</span>Numeral system<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="speed" disabled>
+              <span class="tile-icon" aria-hidden="true">🚀</span>Speed<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="temperature" disabled>
+              <span class="tile-icon" aria-hidden="true">🌡️</span>Temperature<small>Soon</small>
+            </button>
+            <button type="button" class="converter-tile" data-converter="bmi" disabled>
+              <span class="tile-icon" aria-hidden="true">🩺</span>BMI<small>Soon</small>
+            </button>
+          </div>
+
+          <div id="currency-view" class="currency" hidden>
+            <!-- label + input pairs: clicking the label focuses the input, and screen readers read it out. -->
+            <div class="currency-row">
+              <label for="currency-from">From</label>
+              <select id="currency-from"></select>
+              <input id="currency-amount" type="text" inputmode="decimal" autocomplete="off" value="1" aria-label="Amount" />
+            </div>
+
+            <button type="button" id="currency-swap" class="currency-swap" aria-label="Swap currencies">⇅</button>
+
+            <div class="currency-row">
+              <label for="currency-to">To</label>
+              <select id="currency-to"></select>
+              <output id="currency-result" class="currency-result" aria-live="polite">–</output>
+            </div>
+
+            <p id="currency-rate" class="currency-rate"></p>
+            <p id="currency-status" class="currency-status"></p>
+          </div>
         </section>
 
         <!-- The settings screen: pick a theme. Each card's data-theme-option is the theme's name in the code. -->

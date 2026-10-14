@@ -1,5 +1,6 @@
 import './style.css'
 import './themes.css'
+import { isConverterOpen, handleConverterKey } from './converter.js'
 
 // ---------- State: the whole sum is kept as a list of pieces (tokens) ----------
 // "12 + sin(30) × 2" is stored as ['12', '+', 'sin', '30', ')', '*', '2'].
@@ -454,6 +455,7 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeSettings()
     return
   }
+  if (isConverterOpen()) return handleConverterKey(event) // lets you type into the amount box
 
   const mapped = keyToAction(event.key)
   if (!mapped) return
