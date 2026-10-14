@@ -151,8 +151,8 @@
             <button type="button" class="converter-tile" data-converter="data">
               <span class="tile-icon" aria-hidden="true">💾</span>Data
             </button>
-            <button type="button" class="converter-tile" data-converter="date" disabled>
-              <span class="tile-icon" aria-hidden="true">📅</span>Date<small>Soon</small>
+            <button type="button" class="converter-tile" data-converter="date">
+              <span class="tile-icon" aria-hidden="true">📅</span>Date
             </button>
             <button type="button" class="converter-tile" data-converter="discount" disabled>
               <span class="tile-icon" aria-hidden="true">🏷️</span>Discount<small>Soon</small>
@@ -258,6 +258,53 @@
               <div>
                 <dt>Total repayment</dt>
                 <dd id="loan-total">–</dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Date: days between two dates, or a date plus/minus some days. date.js does the maths. -->
+          <div id="date-view" class="convert" hidden>
+            <div class="convert-row">
+              <label for="date-mode">What to work out</label>
+              <select id="date-mode">
+                <option value="between">Days between two dates</option>
+                <option value="add">Add or subtract days</option>
+              </select>
+            </div>
+
+            <div class="convert-row">
+              <label for="date-start">Start date</label>
+              <input id="date-start" class="field-small" type="date" />
+            </div>
+
+            <div id="date-between-fields" class="field-group">
+              <div class="convert-row">
+                <label for="date-end">End date</label>
+                <input id="date-end" class="field-small" type="date" />
+              </div>
+            </div>
+
+            <div id="date-add-fields" class="field-group" hidden>
+              <div class="field-pair">
+                <div class="convert-row">
+                  <label for="date-direction">Add or subtract</label>
+                  <select id="date-direction">
+                    <option value="add">Add</option>
+                    <option value="subtract">Subtract</option>
+                  </select>
+                </div>
+                <div class="convert-row">
+                  <label for="date-days">Days</label>
+                  <input id="date-days" class="field-small" type="text" inputmode="numeric" autocomplete="off" value="100" />
+                </div>
+              </div>
+            </div>
+
+            <dl class="results" aria-live="polite">
+              <div class="results-main">
+                <dt id="date-main-label">Days between</dt>
+                <dd id="date-main">–</dd>
+                <dd id="date-detail" class="results-note"></dd>
               </div>
             </dl>
           </div>
