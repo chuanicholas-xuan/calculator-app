@@ -456,18 +456,18 @@ body {
   font-size: 1.75rem;
 }
 
-/* The currency screen: two rows (from / to) with a swap button between them. */
-.currency {
+/* A converter screen (currency, length, ...): two rows (from / to) with a swap button between them. */
+.convert {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.currency[hidden] {
+.convert[hidden] {
   display: none;
 }
 
-.currency-row {
+.convert-row {
   display: grid;
   grid-template-columns: 1fr;
   gap: 6px;
@@ -476,13 +476,13 @@ body {
   background: var(--key);
 }
 
-.currency-row label {
+.convert-row label {
   font-size: 0.8rem;
   color: var(--muted);
 }
 
-.currency select,
-.currency input {
+.convert select,
+.convert input {
   width: 100%;
   border: none;
   background: none;
@@ -490,33 +490,33 @@ body {
   font: inherit;
 }
 
-.currency select {
+.convert select {
   font-size: 0.95rem;
   cursor: pointer;
 }
 
 /* The dropdown list itself uses the system colours, so keep its options readable. */
-.currency option {
+.convert option {
   background: var(--bg);
   color: var(--text);
 }
 
-.currency input,
-.currency-result {
+.convert input,
+.convert-result {
   font-size: 2rem;
   text-align: right;
   overflow-wrap: anywhere;
 }
 
-.currency input:focus-visible,
-.currency select:focus-visible,
-.currency-swap:focus-visible {
+.convert input:focus-visible,
+.convert select:focus-visible,
+.convert-swap:focus-visible {
   outline: 3px solid var(--operator);
   outline-offset: 2px;
   border-radius: 8px;
 }
 
-.currency-swap {
+.convert-swap {
   align-self: center;
   width: 44px;
   height: 44px;
@@ -528,13 +528,13 @@ body {
   cursor: pointer;
 }
 
-.currency-rate {
+.convert-rate {
   margin: 4px 0 0;
   text-align: center;
   color: var(--text);
 }
 
-.currency-status {
+.convert-status {
   margin: 0;
   font-size: 0.75rem;
   text-align: center;
