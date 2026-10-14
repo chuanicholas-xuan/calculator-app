@@ -18,12 +18,36 @@
               <path d="M12 7v5l3 2" />
             </svg>
           </button>
+          <!-- Switches the extra scientific buttons on and off. aria-pressed tells screen readers if it is on. -->
+          <button type="button" id="mode-toggle" class="mode-button" aria-pressed="false">sci</button>
         </div>
 
         <!-- The screen: the sum on top, the answer below. aria-live makes screen readers announce changes. -->
         <div id="display" class="display" aria-live="polite">
           <div id="expression" class="expression">0</div>
           <output id="result" class="result"></output>
+        </div>
+
+        <!-- Scientific buttons: only shown when the calculator has the "scientific" class.
+             Buttons with a 2nd version keep both versions in data-first-* and data-second-* attributes. -->
+        <div class="science-keys">
+          <button type="button" data-action="second">2nd</button>
+          <button type="button" data-action="angle" aria-label="angle unit">deg</button>
+          <button type="button" data-action="open" data-value="sin" data-first-action="open" data-first-value="sin" data-first-label="sin" data-second-action="open" data-second-value="asin" data-second-label="sin⁻¹">sin</button>
+          <button type="button" data-action="open" data-value="cos" data-first-action="open" data-first-value="cos" data-first-label="cos" data-second-action="open" data-second-value="acos" data-second-label="cos⁻¹">cos</button>
+          <button type="button" data-action="open" data-value="tan" data-first-action="open" data-first-value="tan" data-first-label="tan" data-second-action="open" data-second-value="atan" data-second-label="tan⁻¹">tan</button>
+
+          <button type="button" data-action="operator" data-value="^" aria-label="power">xʸ</button>
+          <button type="button" data-action="open" data-value="lg" data-first-action="open" data-first-value="lg" data-first-label="lg" data-second-action="open" data-second-value="pow10" data-second-label="10ˣ">lg</button>
+          <button type="button" data-action="open" data-value="ln" data-first-action="open" data-first-value="ln" data-first-label="ln" data-second-action="open" data-second-value="exp" data-second-label="eˣ">ln</button>
+          <button type="button" data-action="open" data-value="(">(</button>
+          <button type="button" data-action="close">)</button>
+
+          <button type="button" data-action="open" data-value="sqrt" data-first-action="open" data-first-value="sqrt" data-first-label="√x" data-second-action="postfix" data-second-value="²" data-second-label="x²">√x</button>
+          <button type="button" data-action="postfix" data-value="!" aria-label="factorial">x!</button>
+          <button type="button" data-action="postfix" data-value="⁻¹" aria-label="one over x">1/x</button>
+          <button type="button" data-action="constant" data-value="π">π</button>
+          <button type="button" data-action="constant" data-value="e">e</button>
         </div>
 
         <!-- All buttons live in one container so JS can listen to them in one place later. -->

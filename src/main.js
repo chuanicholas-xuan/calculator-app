@@ -1,22 +1,50 @@
 import './style.css'
 
 // ---------- State: the whole sum is kept as a list of pieces (tokens) ----------
-// "12 + 7 × 3" is stored as ['12', '+', '7', '*', '3'].
+// "12 + sin(30) × 2" is stored as ['12', '+', 'sin', '30', ')', '*', '2'].
 // Numbers stay as text while you type them, so "0." and "1.50" survive.
+// A percent stays on its number, like '10%', so the screen and the history can show it.
 const state = {
   tokens: [],
   justEvaluated: false, // true right after =, so the next key knows to start fresh or continue from the answer
   result: '', // the answer shown after =
+  angleUnit: 'deg', // sin, cos and tan read their number as degrees or radians
+  second: false, // the "2nd" key swaps some buttons to their opposite (sin -> sin⁻¹)
 }
 
 const MAX_DIGITS = 12
-const OPERATORS = ['+', '-', '*', '/']
-const SYMBOLS = { '+': '+', '-': '−', '*': '×', '/': '÷' } // what humans see vs what the code uses
 
+// Every kind of token the sum can contain.
+const OPERATORS = ['+', '-', '*', '/', '^'] // go BETWEEN two numbers
+const POSTFIX = ['!', '²', '⁻¹'] // go AFTER a number: 5!, 3², 4⁻¹
+const CONSTANTS = { π: Math.PI, e: Math.E }
+const NEGATIVE = 'neg' // a minus sign in front of a number, as in "(−5"
+
+// A function token also opens a bracket, so 'sin' is shown as "sin(" and needs a ")" later.
+const FUNCTIONS = {
+  sin: { label: 'sin(', run: (x) => trig(Math.sin, x) },
+  cos: { label: 'cos(', run: (x) => trig(Math.cos, x) },
+  tan: { label: 'tan(', run: (x) => tan(x) },
+  asin: { label: 'sin⁻¹(', run: (x) => fromRadians(Math.asin(x)) },
+  acos: { label: 'cos⁻¹(', run: (x) => fromRadians(Math.acos(x)) },
+  atan: { label: 'tan⁻¹(', run: (x) => fromRadians(Math.atan(x)) },
+  lg: { label: 'lg(', run: Math.log10 },
+  ln: { label: 'ln(', run: Math.log },
+  sqrt: { label: '√(', run: Math.sqrt },
+  pow10: { label: '10^(', run: (x) => 10 ** x },
+  exp: { label: 'e^(', run: Math.exp },
+}
+
+// What humans see vs what the code uses.
+const SYMBOLS = { '+': ' + ', '-': ' − ', '*': ' × ', '/': ' ÷ ', '^': '^', [NEGATIVE]: '−' }
+
+const calculator = document.querySelector('.calculator')
 const display = document.getElementById('display')
 const expressionEl = document.getElementById('expression')
 const resultEl = document.getElementById('result')
 const keys = document.querySelector('.keys')
+const scienceKeys = document.querySelector('.science-keys')
+const modeButton = document.getElementById('mode-toggle')
 
 const historyPanel = document.getElementById('history')
 const historyList = document.getElementById('history-list')
@@ -24,42 +52,161 @@ const historyOpenButton = document.getElementById('history-open')
 const historyCloseButton = document.getElementById('history-close')
 const historyClearButton = document.getElementById('history-clear')
 
-// ---------- Small helpers ----------
+// ---------- Small helpers: what kind of token is this? ----------
 const isOperator = (token) => OPERATORS.includes(token)
+const isPostfix = (token) => POSTFIX.includes(token)
+const isFunction = (token) => Object.hasOwn(FUNCTIONS, token)
+const isConstant = (token) => Object.hasOwn(CONSTANTS, token)
+const isPercent = (token) => typeof token === 'string' && /^-?\d.*%$/.test(token)
+const isNumber = (token) => typeof token === 'string' && /^-?\d/.test(token) && !isPercent(token)
+const opensBracket = (token) => token === '(' || isFunction(token)
+
+// Something you could put a + after: a number, π, a closing bracket, or 5!
+const endsValue = (token) =>
+  isNumber(token) || isPercent(token) || isConstant(token) || token === ')' || isPostfix(token)
+
+// Something a value can start with. Used for "2π" meaning 2 × π.
+const startsValue = (token) =>
+  isNumber(token) || isPercent(token) || isConstant(token) || opensBracket(token)
+
 const lastToken = () => state.tokens[state.tokens.length - 1]
 const setLastToken = (value) => (state.tokens[state.tokens.length - 1] = value)
 
+// How many brackets are still open, so ")" is only allowed when there is one to close.
+function openBrackets() {
+  let count = 0
+  for (const token of state.tokens) {
+    if (opensBracket(token)) count++
+    else if (token === ')') count--
+  }
+  return count
+}
+
 // ---------- Pure maths: no DOM here, so it is easy to test ----------
-// Works out the sum with the normal maths rules: × and ÷ before + and −.
-// Returns a number, or null for "can't be done" (dividing by zero).
+const toRadians = (x) => (state.angleUnit === 'deg' ? (x * Math.PI) / 180 : x)
+const fromRadians = (x) => (state.angleUnit === 'deg' ? (x * 180) / Math.PI : x)
+
+// sin(180°) comes out as 0.000000000000000122 because π can't be stored exactly. Snap it to 0.
+function trig(fn, x) {
+  const result = fn(toRadians(x))
+  return Math.abs(result) < 1e-12 ? 0 : result
+}
+
+// tan(90°) has no answer (it shoots off to infinity), so it must be an Error, not a huge number.
+function tan(x) {
+  if (state.angleUnit === 'deg' && (((x - 90) % 180) + 180) % 180 === 0) return NaN
+  return trig(Math.tan, x)
+}
+
+// 5! = 5 × 4 × 3 × 2 × 1. Only whole numbers from 0 to 170 (171! is too big for JavaScript).
+function factorial(n) {
+  if (!Number.isInteger(n) || n < 0 || n > 170) return NaN
+  let result = 1
+  for (let i = 2; i <= n; i++) result *= i
+  return result
+}
+
+// ---------- The parser: reads the token list using the maths rules ----------
+// Each function below handles one level of "stickiness", from loosest to tightest:
+//   + and −   are loosest       (parseSum)
+//   × and ÷   stick tighter     (parseProduct)
+//   −5        a minus in front  (parseSigned)
+//   ^         tighter still     (parsePower)
+//   5! 3²     tightest          (parseAfter)
+//   numbers, π, (brackets), sin(...)  are the building blocks (parseValue)
+// Each level asks the next tighter level for its pieces. That is why 1 + 2 × 3 is 7:
+// parseSum asks parseProduct for "2 × 3" as one piece before it does the +.
+// This style is called a "recursive descent parser".
+
 function evaluate(tokens) {
-  if (tokens.length === 0) return 0
-  if (isOperator(tokens[tokens.length - 1])) tokens = tokens.slice(0, -1) // ignore a trailing "+"
+  const reader = { tokens, position: 0 }
+  try {
+    const value = parseSum(reader)
+    if (reader.position < tokens.length) return null // something left over, like a stray ")"
+    return value
+  } catch {
+    return null // the sum doesn't make sense, like "( )"
+  }
+}
 
-  // Pass 1: do every × and ÷ from left to right, leaving only + and −.
-  const terms = [Number(tokens[0])]
-  for (let i = 1; i < tokens.length; i += 2) {
-    const operator = tokens[i]
-    const number = Number(tokens[i + 1])
+const peek = (reader) => reader.tokens[reader.position]
+const take = (reader) => reader.tokens[reader.position++]
 
-    if (operator === '*') terms[terms.length - 1] *= number
-    else if (operator === '/') {
-      if (number === 0) return null
-      terms[terms.length - 1] /= number
+function parseSum(reader) {
+  let { value } = parseProduct(reader)
+  while (peek(reader) === '+' || peek(reader) === '-') {
+    const operator = take(reader)
+    const right = parseProduct(reader)
+    // "200 + 10%" means 200 + (10% of 200), so a lone percent here is a percent OF the left side.
+    const amount = right.lonePercent ? value * right.value : right.value
+    value = operator === '+' ? value + amount : value - amount
+  }
+  return value
+}
+
+function parseProduct(reader) {
+  const start = reader.position
+  let value = parseSigned(reader)
+  while (true) {
+    const next = peek(reader)
+    if (next === '*' || next === '/') {
+      take(reader)
+      const right = parseSigned(reader)
+      value = next === '*' ? value * right : value / right
+    } else if (startsValue(next)) {
+      value *= parseSigned(reader) // nothing between them means ×: 2π, 3(4 + 1), 2sin(30)
     } else {
-      terms.push(operator, number)
+      break
     }
   }
+  const lonePercent = reader.position === start + 1 && isPercent(reader.tokens[start])
+  return { value, lonePercent }
+}
 
-  // Pass 2: do the + and − from left to right.
-  let total = terms[0]
-  for (let i = 1; i < terms.length; i += 2) {
-    total = terms[i] === '+' ? total + terms[i + 1] : total - terms[i + 1]
+function parseSigned(reader) {
+  if (peek(reader) === NEGATIVE) {
+    take(reader)
+    return -parseSigned(reader)
   }
-  return total
+  return parsePower(reader)
+}
+
+function parsePower(reader) {
+  const base = parseAfter(reader)
+  if (peek(reader) !== '^') return base
+  take(reader)
+  return base ** parseSigned(reader) // 2^3^2 is 2^(3^2), the way maths books do it
+}
+
+function parseAfter(reader) {
+  let value = parseValue(reader)
+  while (isPostfix(peek(reader))) {
+    const postfix = take(reader)
+    if (postfix === '!') value = factorial(value)
+    else if (postfix === '²') value = value ** 2
+    else value = 1 / value
+  }
+  return value
+}
+
+function parseValue(reader) {
+  const token = take(reader)
+  if (isNumber(token)) return Number(token)
+  if (isPercent(token)) return Number(token.slice(0, -1)) / 100
+  if (isConstant(token)) return CONSTANTS[token]
+
+  if (opensBracket(token)) {
+    const inside = parseSum(reader)
+    // A missing ")" at the very end is fine: "2 × (3 + 4" is closed for you, like on a phone.
+    if (peek(reader) === ')') take(reader)
+    else if (peek(reader) !== undefined) throw new Error('Expected )')
+    return token === '(' ? inside : FUNCTIONS[token].run(inside)
+  }
+  throw new Error(`Unexpected ${token}`)
 }
 
 // 0.1 + 0.2 is 0.30000000000000004 in JavaScript. Rounding to 12 significant digits hides that.
+// Anything that isn't a normal number (÷ 0, √ of a negative, 171!) becomes Error.
 function format(result) {
   if (result === null || !Number.isFinite(result)) return 'Error'
   return String(Number.parseFloat(result.toPrecision(MAX_DIGITS)))
@@ -78,10 +225,12 @@ function inputDigit(digit) {
   if (state.justEvaluated) startFresh(false)
 
   const last = lastToken()
-  if (last === undefined || isOperator(last)) {
+  if (isPercent(last)) return // "10%5" makes no sense, so ignore the digit
+  if (isNumber(last)) {
+    if (last.replace(/[-.]/g, '').length < MAX_DIGITS) setLastToken(last === '0' ? digit : last + digit)
+  } else {
+    if (endsValue(last)) state.tokens.push('*') // "π5" or ")5" means × 5
     state.tokens.push(digit)
-  } else if (last.replace(/[-.]/g, '').length < MAX_DIGITS) {
-    setLastToken(last === '0' ? digit : last + digit)
   }
 }
 
@@ -89,8 +238,13 @@ function inputDecimal() {
   if (state.justEvaluated) startFresh(false)
 
   const last = lastToken()
-  if (last === undefined || isOperator(last)) state.tokens.push('0.')
-  else if (!last.includes('.')) setLastToken(last + '.')
+  if (isPercent(last)) return
+  if (isNumber(last)) {
+    if (!last.includes('.') && !last.includes('e')) setLastToken(last + '.')
+  } else {
+    if (endsValue(last)) state.tokens.push('*')
+    state.tokens.push('0.')
+  }
 }
 
 function chooseOperator(operator) {
@@ -101,65 +255,128 @@ function chooseOperator(operator) {
 
   const last = lastToken()
   if (last === undefined) state.tokens.push('0', operator) // pressing + first means "0 +"
+  else if (opensBracket(last)) {
+    if (operator === '-') state.tokens.push(NEGATIVE) // "(−5" is allowed, "(×5" is not
+  } else if (last === NEGATIVE) return
   else if (isOperator(last)) setLastToken(operator) // pressing + then × swaps the operator
   else state.tokens.push(operator)
 }
 
+// sin, cos, √ and friends, plus a plain "(".
+function openBracket(token) {
+  if (state.justEvaluated) startFresh(false)
+  state.tokens.push(token) // "2(" and "2sin(" are fine: the parser reads them as 2 × ...
+}
+
+function closeBracket() {
+  if (state.justEvaluated) return
+  if (openBrackets() > 0 && endsValue(lastToken())) state.tokens.push(')')
+}
+
+function inputConstant(name) {
+  if (state.justEvaluated) startFresh(false)
+  const last = lastToken()
+  if (isPercent(last)) return
+  if (endsValue(last)) state.tokens.push('*') // "2π" is shown as "2 × π" so it is obvious
+  state.tokens.push(name)
+}
+
+// 5!, 3², 4⁻¹ act on whatever is just before them.
+function inputPostfix(postfix) {
+  if (state.justEvaluated) {
+    if (state.result === 'Error') return
+    startFresh(true)
+  }
+  const last = lastToken()
+  if (endsValue(last) && !isPercent(last)) state.tokens.push(postfix)
+}
+
 function equals() {
-  if (state.tokens.length === 0 || state.justEvaluated) return
-  if (isOperator(lastToken())) state.tokens.pop() // "5 +" then = just means "5"
+  if (state.justEvaluated) return
+
+  // Drop anything unfinished at the end: "5 +" or "2 × sin(" just mean "5" and "2".
+  while (state.tokens.length && !endsValue(lastToken())) state.tokens.pop()
+  if (state.tokens.length === 0) return
+
+  // Close any brackets left open, so the history shows the full sum.
+  for (let i = openBrackets(); i > 0; i--) state.tokens.push(')')
 
   state.result = format(evaluate(state.tokens))
   state.justEvaluated = true
 
   // Only real sums go in the history: "5 =" or a sum that ended in Error is not worth keeping.
-  if (state.tokens.some(isOperator) && state.result !== 'Error') {
-    addToHistory(expressionText(), state.result)
+  if (state.tokens.length > 1 || isPercent(state.tokens[0])) {
+    if (state.result !== 'Error') addToHistory(expressionText(), state.result)
   }
 }
 
-// Backspace: remove one character. After =, it clears everything.
+// Backspace: remove one character of a number, or one whole token (like "sin(").
+// After =, it clears everything.
 function deleteLast() {
   if (state.justEvaluated) return reset()
 
   const last = lastToken()
   if (last === undefined) return
-  if (isOperator(last) || last.length === 1 || last === '-0' || /^-\d$/.test(last)) {
-    state.tokens.pop()
-  } else {
-    setLastToken(last.slice(0, -1))
-  }
+  const isLongNumber = (isNumber(last) || isPercent(last)) && !/^-?\d$/.test(last) && !last.includes('e')
+  if (isLongNumber) setLastToken(last.slice(0, -1))
+  else state.tokens.pop()
 }
 
 // Percent acts on the number you are typing, not between two numbers, so it is not an operator.
-// After + or −, it means "this percent OF everything before it": 200 + 10 % -> 200 + 20.
-// Everywhere else it just divides by 100: 50 % -> 0.5, and 200 × 10 % -> 200 × 0.1.
+// It just sticks a % on the number; the parser works out what it means when the maths runs.
 function percent() {
-  if (state.justEvaluated) startFresh(true)
+  if (state.justEvaluated) {
+    if (state.result === 'Error') return
+    startFresh(true) // "90 %" after = means 90% of nothing before it, so 0.9
+  }
 
   const last = lastToken()
-  if (last === undefined || isOperator(last)) return
-
-  const value = Number(last)
-  const before = state.tokens.slice(0, -2) // everything before "+ 10"
-  const operator = state.tokens[state.tokens.length - 2]
-
-  if ((operator === '+' || operator === '-') && before.length > 0) {
-    const base = evaluate(before)
-    setLastToken(format(base === null ? null : (base * value) / 100))
-  } else {
-    setLastToken(format(value / 100))
-  }
-  if (lastToken() === 'Error') {
-    state.result = 'Error'
-    state.justEvaluated = true
-  }
+  if (isNumber(last)) setLastToken(last + '%')
 }
 
 function reset() {
   state.tokens = []
   state.justEvaluated = false
   state.result = ''
+}
+
+// ---------- Scientific mode switches ----------
+function toggleSecond() {
+  state.second = !state.second
+  // Buttons with a "2nd" version keep both in data-* attributes; swap which one is showing.
+  for (const button of scienceKeys.querySelectorAll('[data-second-value]')) {
+    const useSecond = state.second
+    button.dataset.value = useSecond ? button.dataset.secondValue : button.dataset.firstValue
+    button.textContent = useSecond ? button.dataset.secondLabel : button.dataset.firstLabel
+    button.dataset.action = useSecond ? button.dataset.secondAction : button.dataset.firstAction
+  }
+  scienceKeys.querySelector('[data-action="second"]').classList.toggle('active', state.second)
+}
+
+function toggleAngleUnit() {
+  state.angleUnit = state.angleUnit === 'deg' ? 'rad' : 'deg'
+  scienceKeys.querySelector('[data-action="angle"]').textContent = state.angleUnit
+}
+
+// Remember whether scientific mode was on, so a refresh doesn't switch it off.
+const MODE_KEY = 'calculator-mode'
+
+function setScientific(on) {
+  calculator.classList.toggle('scientific', on)
+  modeButton.setAttribute('aria-pressed', String(on))
+  try {
+    localStorage.setItem(MODE_KEY, on ? 'scientific' : 'basic')
+  } catch {
+    // Storage blocked: the mode just won't be remembered.
+  }
+}
+
+modeButton.addEventListener('click', () => setScientific(!calculator.classList.contains('scientific')))
+
+try {
+  setScientific(localStorage.getItem(MODE_KEY) === 'scientific')
+} catch {
+  setScientific(false)
 }
 
 // ---------- One entry point for every input, whether it came from a click or a key ----------
@@ -171,17 +388,26 @@ function handle(action, value) {
   else if (action === 'clear') reset()
   else if (action === 'delete') deleteLast()
   else if (action === 'percent') percent()
+  else if (action === 'open') openBracket(value)
+  else if (action === 'close') closeBracket()
+  else if (action === 'constant') inputConstant(value)
+  else if (action === 'postfix') inputPostfix(value)
+  else if (action === 'second') toggleSecond()
+  else if (action === 'angle') toggleAngleUnit()
 
   render()
 }
 
-// ---------- Mouse: one listener on the container handles every button ----------
-keys.addEventListener('click', (event) => {
+// ---------- Mouse: one listener per button container handles every button inside it ----------
+function onKeyClick(event) {
   const button = event.target.closest('button')
   if (!button) return // clicked the gap between buttons
 
   handle(button.dataset.action, button.dataset.value)
-})
+}
+
+keys.addEventListener('click', onKeyClick)
+scienceKeys.addEventListener('click', onKeyClick)
 
 // ---------- Keyboard: translate a key into the same action a button would send ----------
 const KEY_MAP = {
@@ -190,7 +416,11 @@ const KEY_MAP = {
   '*': ['operator', '*'],
   x: ['operator', '*'],
   '/': ['operator', '/'],
+  '^': ['operator', '^'],
   '%': ['percent'],
+  '!': ['postfix', '!'],
+  '(': ['open', '('],
+  ')': ['close'],
   '.': ['decimal'],
   ',': ['decimal'],
   Enter: ['equals'],
@@ -231,7 +461,7 @@ function flash(action, value) {
   const selector = value
     ? `[data-action="${action}"][data-value="${value}"]`
     : `[data-action="${action}"]`
-  const button = keys.querySelector(selector)
+  const button = calculator.querySelector(selector)
   if (!button) return
 
   button.classList.add('pressed')
@@ -242,14 +472,19 @@ function flash(action, value) {
 // Top line: the sum ("12 + 7"). Bottom line: the answer.
 // While typing, the sum is big and a live preview of the answer is small.
 // After =, they swap: the answer is big and the sum is small.
+function showToken(token) {
+  if (isFunction(token)) return FUNCTIONS[token].label
+  return SYMBOLS[token] ?? token
+}
+
 function expressionText() {
   if (state.tokens.length === 0) return '0'
-  return state.tokens.map((token) => SYMBOLS[token] ?? token).join(' ')
+  return state.tokens.map(showToken).join('')
 }
 
 function previewText() {
-  const hasOperator = state.tokens.some(isOperator)
-  if (!hasOperator || isOperator(lastToken())) return ''
+  const onlyOneNumber = state.tokens.length === 1 && !isPercent(state.tokens[0])
+  if (state.tokens.length === 0 || onlyOneNumber || !endsValue(lastToken())) return ''
   const preview = format(evaluate(state.tokens))
   return preview === 'Error' ? '' : preview
 }

@@ -142,6 +142,8 @@ body {
 /* ---------- History ---------- */
 .toolbar {
   display: flex;
+  justify-content: space-between; /* clock on the left, sci on the right */
+  align-items: center;
 }
 
 /* Round, see-through buttons for the clock, back arrow and bin icons. */
@@ -245,4 +247,81 @@ body {
   margin-top: 40px;
   text-align: center;
   color: var(--muted);
+}
+
+/* ---------- Scientific mode ---------- */
+.mode-button {
+  padding: 6px 14px;
+  border: 1px solid var(--key-hover);
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* aria-pressed="true" means scientific mode is on, so light the button up. */
+.mode-button[aria-pressed="true"] {
+  border-color: var(--operator);
+  color: var(--operator);
+}
+
+.mode-button:focus-visible {
+  outline: 3px solid var(--operator);
+  outline-offset: 2px;
+}
+
+/* Hidden in basic mode; a 5-column grid of shorter buttons in scientific mode. */
+.science-keys {
+  display: none;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: var(--gap);
+}
+
+.calculator.scientific .science-keys {
+  display: grid;
+}
+
+.science-keys button {
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: var(--key);
+  color: var(--function);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.05s;
+}
+
+.science-keys button:hover {
+  background: var(--key-hover);
+}
+
+.science-keys button:active,
+.science-keys button.pressed {
+  transform: scale(0.95);
+  filter: brightness(1.3);
+}
+
+.science-keys button:focus-visible {
+  outline: 3px solid var(--operator);
+  outline-offset: 2px;
+}
+
+/* The 2nd key stays lit while the second set of buttons is showing. */
+.science-keys button.active {
+  background: var(--operator);
+  color: var(--text-dark);
+}
+
+/* In scientific mode there is less room, so the main buttons get a bit shorter. */
+.calculator.scientific .keys button {
+  aspect-ratio: 1.25;
+  font-size: 1.3rem;
+}
+
+.calculator.scientific .keys [data-action="equals"] {
+  aspect-ratio: auto;
 }
