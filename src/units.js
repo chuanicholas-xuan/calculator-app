@@ -27,6 +27,26 @@ export const UNIT_CONVERTERS = {
       { code: 'ly', name: 'Light-year', factor: 9460730472580800 },
     ],
   },
+  // Base unit: the kilogram.
+  mass: {
+    title: 'Mass',
+    defaults: ['kg', 'lb'],
+    units: [
+      { code: 't', name: 'Tonne', factor: 1000 },
+      { code: 'kg', name: 'Kilogram', factor: 1 },
+      { code: 'g', name: 'Gram', factor: 0.001 },
+      { code: 'mg', name: 'Milligram', factor: 1e-6 },
+      { code: 'µg', name: 'Microgram', factor: 1e-9 },
+      { code: 'ct', name: 'Carat', factor: 0.0002 },
+      { code: 'lb', name: 'Pound', factor: 0.45359237 },
+      { code: 'oz', name: 'Ounce', factor: 0.028349523125 },
+      { code: 'st', name: 'Stone', factor: 6.35029318 },
+      { code: 'ton (US)', name: 'Short ton', factor: 907.18474 },
+      { code: 'ton (UK)', name: 'Long ton', factor: 1016.0469088 },
+      { code: 'kati', name: 'Kati (Malaysia, Singapore)', factor: (0.45359237 * 4) / 3 }, // 1⅓ pounds
+      { code: 'jin', name: 'Jin (China)', factor: 0.5 },
+    ],
+  },
 }
 
 const view = document.getElementById('unit-view')
