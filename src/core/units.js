@@ -1,8 +1,7 @@
-// ---------- Unit converters: length now, more later ----------
-// Every converter here works the same way, so the code is written ONCE and each converter
+// ---------- Unit converters: the data and the maths. Pure JavaScript, no React. ----------
+// Every unit converter works the same way, so the code is written ONCE and each converter
 // is just data: a list of units and how big each one is compared to one "base" unit.
-// Adding Mass later means adding a "mass" entry below, not writing new code.
-// This idea is called "data-driven" design.
+// This idea is called "data-driven" design. One React component (UnitConverter.jsx) draws them all.
 
 // factor = how many base units fit in one of this unit. For length the base is the metre:
 // 1 km = 1000 m, so km has factor 1000.
@@ -165,30 +164,20 @@ export const UNIT_CONVERTERS = {
   },
 }
 
-const view = document.getElementById('unit-view')
-const amountInput = document.getElementById('unit-amount')
-const fromSelect = document.getElementById('unit-from')
-const toSelect = document.getElementById('unit-to')
-const swapButton = document.getElementById('unit-swap')
-const resultEl = document.getElementById('unit-result')
-const rateLine = document.getElementById('unit-rate')
-const signButton = document.getElementById('unit-sign')
-
-let current = null // the converter that is open, e.g. UNIT_CONVERTERS.length
-let currentKey = ''
-
-// ---------- Pure maths: no DOM here, so it is easy to test ----------
+// ---------- Maths ----------
 // Go through the base unit: km -> metres -> miles.
 // Most units just multiply by a factor; temperature units bring their own functions.
 const toBase = (unit, value) => (unit.toBase ? unit.toBase(value) : value * unit.factor)
 const fromBase = (unit, value) => (unit.fromBase ? unit.fromBase(value) : value / unit.factor)
 
+// True for units like °C that need more than a multiply (0 °C is not 0 K).
+export const hasOffset = (fromUnit, toUnit) => Boolean(fromUnit.toBase || toUnit.fromBase)
+
 export function convertUnits(amount, fromUnit, toUnit) {
   const result = fromBase(toUnit, toBase(fromUnit, amount))
   // Adding and subtracting 273.15 leaves tiny leftovers (0 °C can come out as 0.0000000000000568).
   // Temperatures never need more than 10 decimal places, so round those off.
-  const hasOffset = fromUnit.toBase || toUnit.fromBase
-  return hasOffset ? Math.round(result * 1e10) / 1e10 : result
+  return hasOffset(fromUnit, toUnit) ? Math.round(result * 1e10) / 1e10 : result
 }
 
 // Normal numbers get up to 10 significant digits. Huge or tiny ones (light-years in nanometres)
@@ -201,102 +190,33 @@ export function formatNumber(value) {
   return value.toLocaleString(undefined, { maximumSignificantDigits: 10 })
 }
 
-// ---------- Remembering the last pair of units, one pair per converter ----------
-const storageKey = () => `calculator-units-${currentKey}`
+// Same rule as the currency box: only digits and one decimal point,
+// plus a minus sign at the very start for converters that allow negatives (temperature).
+export function cleanAmount(text, allowNegative) {
+  const negative = allowNegative && text.trim().startsWith('-')
+  const digits = text.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1')
+  return (negative ? '-' : '') + digits
+}
 
-function loadPair() {
-  const codes = current.units.map((unit) => unit.code)
+export const amountValue = (text) => (/\d/.test(text) ? Number(text) : 0) // "" and "-" count as 0
+
+// ---------- Remembering the last pair of units, one pair per converter ----------
+export function loadPair(key) {
+  const converter = UNIT_CONVERTERS[key]
+  const codes = converter.units.map((unit) => unit.code)
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey()))
+    const saved = JSON.parse(localStorage.getItem(`calculator-units-${key}`))
     if (codes.includes(saved?.from) && codes.includes(saved?.to)) return saved
   } catch {
     // Broken storage: use the defaults.
   }
-  return { from: current.defaults[0], to: current.defaults[1] }
+  return { from: converter.defaults[0], to: converter.defaults[1] }
 }
 
-function savePair() {
+export function savePair(key, pair) {
   try {
-    localStorage.setItem(storageKey(), JSON.stringify({ from: fromSelect.value, to: toSelect.value }))
+    localStorage.setItem(`calculator-units-${key}`, JSON.stringify(pair))
   } catch {
     // Not important if this fails.
   }
-}
-
-// ---------- Drawing ----------
-function fillLists() {
-  for (const select of [fromSelect, toSelect]) {
-    select.replaceChildren()
-    for (const unit of current.units) {
-      const option = document.createElement('option')
-      option.value = unit.code
-      option.textContent = `${unit.code} · ${unit.name}`
-      select.append(option)
-    }
-  }
-  const pair = loadPair()
-  fromSelect.value = pair.from
-  toSelect.value = pair.to
-}
-
-const findUnit = (code) => current.units.find((unit) => unit.code === code)
-
-// Same rule as the currency box: only digits and one decimal point,
-// plus a minus sign at the very start for converters that allow negatives (temperature).
-function readAmount() {
-  const negative = current.allowNegative && amountInput.value.trim().startsWith('-')
-  const digits = amountInput.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1')
-  const cleaned = (negative ? '-' : '') + digits
-  if (cleaned !== amountInput.value) amountInput.value = cleaned
-  return digits === '' ? 0 : Number(cleaned)
-}
-
-function convert() {
-  const from = findUnit(fromSelect.value)
-  const to = findUnit(toSelect.value)
-  resultEl.textContent = formatNumber(convertUnits(readAmount(), from, to))
-  // "1 °C = 33.8 °F" is true but reads like "each degree is 33.8", so skip it for offset units.
-  const hasOffset = from.toBase || to.fromBase
-  rateLine.textContent = hasOffset ? '' : `1 ${from.code} = ${formatNumber(convertUnits(1, from, to))} ${to.code}`
-}
-
-amountInput.addEventListener('input', convert)
-
-// Phone number keyboards often have no minus key, so temperature gets a ± button.
-signButton.addEventListener('click', () => {
-  amountInput.value = amountInput.value.startsWith('-') ? amountInput.value.slice(1) : `-${amountInput.value}`
-  convert()
-})
-
-for (const select of [fromSelect, toSelect]) {
-  select.addEventListener('change', () => {
-    savePair()
-    convert()
-  })
-}
-
-swapButton.addEventListener('click', () => {
-  ;[fromSelect.value, toSelect.value] = [toSelect.value, fromSelect.value]
-  savePair()
-  convert()
-})
-
-// ---------- Used by converter.js ----------
-export function showUnitView(key) {
-  current = UNIT_CONVERTERS[key]
-  currentKey = key
-  fillLists()
-  signButton.hidden = !current.allowNegative
-  convert()
-  view.hidden = false
-  amountInput.focus()
-  return current.title
-}
-
-export function hideUnitView() {
-  view.hidden = true
-}
-
-export function isUnitViewOpen() {
-  return !view.hidden
 }
