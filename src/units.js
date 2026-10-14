@@ -84,6 +84,28 @@ export const UNIT_CONVERTERS = {
       { code: 'ns', name: 'Nanosecond', factor: 1e-9 },
     ],
   },
+  // Base unit: the byte. KB/MB/GB use 1000 (what drive makers and phones show);
+  // KiB/MiB/GiB use 1024 (what Windows shows, even though it labels them KB/MB/GB).
+  data: {
+    title: 'Data',
+    defaults: ['GB', 'MB'],
+    units: [
+      { code: 'bit', name: 'Bit', factor: 0.125 },
+      { code: 'B', name: 'Byte', factor: 1 },
+      { code: 'KB', name: 'Kilobyte (1000 B)', factor: 1e3 },
+      { code: 'MB', name: 'Megabyte', factor: 1e6 },
+      { code: 'GB', name: 'Gigabyte', factor: 1e9 },
+      { code: 'TB', name: 'Terabyte', factor: 1e12 },
+      { code: 'PB', name: 'Petabyte', factor: 1e15 },
+      { code: 'KiB', name: 'Kibibyte (1024 B)', factor: 1024 },
+      { code: 'MiB', name: 'Mebibyte', factor: 1024 ** 2 },
+      { code: 'GiB', name: 'Gibibyte', factor: 1024 ** 3 },
+      { code: 'TiB', name: 'Tebibyte', factor: 1024 ** 4 },
+      { code: 'Kb', name: 'Kilobit', factor: 125 },
+      { code: 'Mb', name: 'Megabit', factor: 125000 },
+      { code: 'Gb', name: 'Gigabit', factor: 125000000 },
+    ],
+  },
 }
 
 const view = document.getElementById('unit-view')
