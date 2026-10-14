@@ -657,3 +657,8 @@ body {
 .results.numbers dd {
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
+
+/* A smaller answer that needs the whole width. */
+.results .results-wide {
+  grid-column: 1 / -1;
+}
