@@ -47,6 +47,25 @@ export const UNIT_CONVERTERS = {
       { code: 'jin', name: 'Jin (China)', factor: 0.5 },
     ],
   },
+  // Base unit: the square metre.
+  area: {
+    title: 'Area',
+    defaults: ['m²', 'ft²'],
+    units: [
+      { code: 'km²', name: 'Square kilometre', factor: 1e6 },
+      { code: 'ha', name: 'Hectare', factor: 10000 },
+      { code: 'a', name: 'Are', factor: 100 },
+      { code: 'm²', name: 'Square metre', factor: 1 },
+      { code: 'dm²', name: 'Square decimetre', factor: 0.01 },
+      { code: 'cm²', name: 'Square centimetre', factor: 1e-4 },
+      { code: 'mm²', name: 'Square millimetre', factor: 1e-6 },
+      { code: 'mi²', name: 'Square mile', factor: 2589988.110336 },
+      { code: 'ac', name: 'Acre', factor: 4046.8564224 },
+      { code: 'yd²', name: 'Square yard', factor: 0.83612736 },
+      { code: 'ft²', name: 'Square foot', factor: 0.09290304 },
+      { code: 'in²', name: 'Square inch', factor: 0.00064516 },
+    ],
+  },
 }
 
 const view = document.getElementById('unit-view')
