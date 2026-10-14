@@ -5,6 +5,7 @@ import UnitConverter from './converters/UnitConverter.jsx'
 import FinanceConverter from './converters/FinanceConverter.jsx'
 import DateConverter from './converters/DateConverter.jsx'
 import DiscountConverter from './converters/DiscountConverter.jsx'
+import NumeralConverter from './converters/NumeralConverter.jsx'
 import { UNIT_CONVERTERS } from '../core/units.js'
 
 // The tiles on the converter's home grid, in the same order as the phone's screen.
@@ -32,6 +33,7 @@ const SCREENS = {
   finance: FinanceConverter,
   date: DateConverter,
   discount: DiscountConverter,
+  numeral: NumeralConverter,
   ...Object.fromEntries(Object.keys(UNIT_CONVERTERS).map((kind) => [kind, UnitConverter])),
 }
 
