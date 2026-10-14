@@ -2,12 +2,14 @@ import { useEffect, useReducer, useRef, useState } from 'react'
 import { calculatorReducer, initialState } from './core/calculator.js'
 import { keyToAction } from './core/keyboard.js'
 import { addEntry, loadHistory, saveHistory } from './core/history.js'
+import { applyTheme, loadTheme } from './core/theme.js'
 import Display from './components/Display.jsx'
 import ScienceKeys from './components/ScienceKeys.jsx'
 import Keypad from './components/Keypad.jsx'
 import HistoryPanel from './components/HistoryPanel.jsx'
+import SettingsPanel from './components/SettingsPanel.jsx'
 import { keyId } from './components/Key.jsx'
-import { HistoryIcon } from './components/icons.jsx'
+import { HistoryIcon, SettingsIcon } from './components/icons.jsx'
 
 // Remember whether scientific mode was on, so a refresh doesn't switch it off.
 const MODE_KEY = 'calculator-mode'
@@ -26,14 +28,20 @@ export default function App() {
   const [scientific, setScientific] = useState(loadScientific)
   const [pressed, setPressed] = useState(null) // which button to light up after a key press
   const [history, setHistory] = useState(loadHistory) // newest first
-  const [panel, setPanel] = useState(null) // which screen covers the calculator: null or 'history'
-  const historyButton = useRef(null) // a "ref" lets us reach the real button, to give it focus back
+  const [theme, setTheme] = useState(loadTheme)
+  const [panel, setPanel] = useState(null) // which screen covers the calculator: null, 'history' or 'settings'
+  const opener = useRef(null) // a "ref" remembers the button that opened a panel, to give it focus back
 
   const press = (action, value) => dispatch({ action, value })
 
+  function openPanel(name, event) {
+    opener.current = event.currentTarget
+    setPanel(name)
+  }
+
   function closePanel() {
     setPanel(null)
-    historyButton.current?.focus()
+    opener.current?.focus()
   }
 
   // useEffect runs code AFTER React has drawn the screen: a good place for saving and listening.
@@ -45,6 +53,8 @@ export default function App() {
 
   // Save to storage whenever the list changes (after a new sum, or after clearing).
   useEffect(() => saveHistory(history), [history])
+
+  useEffect(() => applyTheme(theme), [theme])
 
   useEffect(() => {
     try {
@@ -59,7 +69,7 @@ export default function App() {
     function onKeyDown(event) {
       if (event.ctrlKey || event.metaKey || event.altKey) return // leave shortcuts like Ctrl+C alone
 
-      // While History is open, number keys must not type into the hidden calculator.
+      // While a panel is open, number keys must not type into the hidden calculator.
       if (panel) {
         if (event.key === 'Escape') closePanel()
         return
@@ -92,10 +102,18 @@ export default function App() {
           id="history-open"
           className="icon-button"
           aria-label="Show history"
-          ref={historyButton}
-          onClick={() => setPanel('history')}
+          onClick={(event) => openPanel('history', event)}
         >
           <HistoryIcon />
+        </button>
+        <button
+          type="button"
+          id="settings-open"
+          className="icon-button"
+          aria-label="Settings"
+          onClick={(event) => openPanel('settings', event)}
+        >
+          <SettingsIcon />
         </button>
         {/* aria-pressed tells screen readers whether scientific mode is on. */}
         <button
@@ -128,6 +146,7 @@ export default function App() {
           }}
         />
       )}
+      {panel === 'settings' && <SettingsPanel theme={theme} onPickTheme={setTheme} onClose={closePanel} />}
     </main>
   )
 }
