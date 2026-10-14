@@ -106,6 +106,31 @@ export const UNIT_CONVERTERS = {
       { code: 'Gb', name: 'Gigabit', factor: 125000000 },
     ],
   },
+  // Base unit: the litre. US and UK gallons, pints and fluid ounces are different sizes.
+  volume: {
+    title: 'Volume',
+    defaults: ['L', 'gal (US)'],
+    units: [
+      { code: 'm³', name: 'Cubic metre', factor: 1000 },
+      { code: 'L', name: 'Litre', factor: 1 },
+      { code: 'dL', name: 'Decilitre', factor: 0.1 },
+      { code: 'cL', name: 'Centilitre', factor: 0.01 },
+      { code: 'mL', name: 'Millilitre', factor: 0.001 },
+      { code: 'cm³', name: 'Cubic centimetre', factor: 0.001 },
+      { code: 'ft³', name: 'Cubic foot', factor: 28.316846592 },
+      { code: 'in³', name: 'Cubic inch', factor: 0.016387064 },
+      { code: 'gal (US)', name: 'US gallon', factor: 3.785411784 },
+      { code: 'qt (US)', name: 'US quart', factor: 0.946352946 },
+      { code: 'pt (US)', name: 'US pint', factor: 0.473176473 },
+      { code: 'cup (US)', name: 'US cup', factor: 0.2365882365 },
+      { code: 'fl oz (US)', name: 'US fluid ounce', factor: 0.0295735295625 },
+      { code: 'tbsp', name: 'Tablespoon (US)', factor: 0.01478676478125 },
+      { code: 'tsp', name: 'Teaspoon (US)', factor: 0.00492892159375 },
+      { code: 'gal (UK)', name: 'UK gallon', factor: 4.54609 },
+      { code: 'pt (UK)', name: 'UK pint', factor: 0.56826125 },
+      { code: 'fl oz (UK)', name: 'UK fluid ounce', factor: 0.0284130625 },
+    ],
+  },
 }
 
 const view = document.getElementById('unit-view')
