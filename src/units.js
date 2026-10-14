@@ -145,6 +145,24 @@ export const UNIT_CONVERTERS = {
       { code: 'c', name: 'Speed of light', factor: 299792458 },
     ],
   },
+  // Temperature can't use a single factor: 0 °C is not 0 °F. So these units say how to get
+  // to the base unit (kelvin) and back, with toBase and fromBase functions instead.
+  temperature: {
+    title: 'Temperature',
+    defaults: ['°C', '°F'],
+    allowNegative: true, // -40 °C is a real temperature; -40 km isn't a real length
+    units: [
+      { code: '°C', name: 'Celsius', toBase: (c) => c + 273.15, fromBase: (k) => k - 273.15 },
+      {
+        code: '°F',
+        name: 'Fahrenheit',
+        toBase: (f) => ((f - 32) * 5) / 9 + 273.15,
+        fromBase: (k) => ((k - 273.15) * 9) / 5 + 32,
+      },
+      { code: 'K', name: 'Kelvin', factor: 1 },
+      { code: '°R', name: 'Rankine', factor: 5 / 9 },
+    ],
+  },
 }
 
 const view = document.getElementById('unit-view')
@@ -154,14 +172,23 @@ const toSelect = document.getElementById('unit-to')
 const swapButton = document.getElementById('unit-swap')
 const resultEl = document.getElementById('unit-result')
 const rateLine = document.getElementById('unit-rate')
+const signButton = document.getElementById('unit-sign')
 
 let current = null // the converter that is open, e.g. UNIT_CONVERTERS.length
 let currentKey = ''
 
 // ---------- Pure maths: no DOM here, so it is easy to test ----------
 // Go through the base unit: km -> metres -> miles.
+// Most units just multiply by a factor; temperature units bring their own functions.
+const toBase = (unit, value) => (unit.toBase ? unit.toBase(value) : value * unit.factor)
+const fromBase = (unit, value) => (unit.fromBase ? unit.fromBase(value) : value / unit.factor)
+
 export function convertUnits(amount, fromUnit, toUnit) {
-  return (amount * fromUnit.factor) / toUnit.factor
+  const result = fromBase(toUnit, toBase(fromUnit, amount))
+  // Adding and subtracting 273.15 leaves tiny leftovers (0 °C can come out as 0.0000000000000568).
+  // Temperatures never need more than 10 decimal places, so round those off.
+  const hasOffset = fromUnit.toBase || toUnit.fromBase
+  return hasOffset ? Math.round(result * 1e10) / 1e10 : result
 }
 
 // Normal numbers get up to 10 significant digits. Huge or tiny ones (light-years in nanometres)
@@ -214,21 +241,32 @@ function fillLists() {
 
 const findUnit = (code) => current.units.find((unit) => unit.code === code)
 
-// Same rule as the currency box: only digits and one decimal point.
+// Same rule as the currency box: only digits and one decimal point,
+// plus a minus sign at the very start for converters that allow negatives (temperature).
 function readAmount() {
-  const cleaned = amountInput.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1')
+  const negative = current.allowNegative && amountInput.value.trim().startsWith('-')
+  const digits = amountInput.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1')
+  const cleaned = (negative ? '-' : '') + digits
   if (cleaned !== amountInput.value) amountInput.value = cleaned
-  return cleaned === '' ? 0 : Number(cleaned)
+  return digits === '' ? 0 : Number(cleaned)
 }
 
 function convert() {
   const from = findUnit(fromSelect.value)
   const to = findUnit(toSelect.value)
   resultEl.textContent = formatNumber(convertUnits(readAmount(), from, to))
-  rateLine.textContent = `1 ${from.code} = ${formatNumber(convertUnits(1, from, to))} ${to.code}`
+  // "1 °C = 33.8 °F" is true but reads like "each degree is 33.8", so skip it for offset units.
+  const hasOffset = from.toBase || to.fromBase
+  rateLine.textContent = hasOffset ? '' : `1 ${from.code} = ${formatNumber(convertUnits(1, from, to))} ${to.code}`
 }
 
 amountInput.addEventListener('input', convert)
+
+// Phone number keyboards often have no minus key, so temperature gets a ± button.
+signButton.addEventListener('click', () => {
+  amountInput.value = amountInput.value.startsWith('-') ? amountInput.value.slice(1) : `-${amountInput.value}`
+  convert()
+})
 
 for (const select of [fromSelect, toSelect]) {
   select.addEventListener('change', () => {
@@ -248,6 +286,7 @@ export function showUnitView(key) {
   current = UNIT_CONVERTERS[key]
   currentKey = key
   fillLists()
+  signButton.hidden = !current.allowNegative
   convert()
   view.hidden = false
   amountInput.focus()

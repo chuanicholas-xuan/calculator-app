@@ -166,8 +166,8 @@
             <button type="button" class="converter-tile" data-converter="speed">
               <span class="tile-icon" aria-hidden="true">🚀</span>Speed
             </button>
-            <button type="button" class="converter-tile" data-converter="temperature" disabled>
-              <span class="tile-icon" aria-hidden="true">🌡️</span>Temperature<small>Soon</small>
+            <button type="button" class="converter-tile" data-converter="temperature">
+              <span class="tile-icon" aria-hidden="true">🌡️</span>Temperature
             </button>
             <button type="button" class="converter-tile" data-converter="bmi" disabled>
               <span class="tile-icon" aria-hidden="true">🩺</span>BMI<small>Soon</small>
@@ -200,7 +200,10 @@
             <div class="convert-row">
               <label for="unit-from">From</label>
               <select id="unit-from"></select>
-              <input id="unit-amount" type="text" inputmode="decimal" autocomplete="off" value="1" aria-label="Amount" />
+              <div class="amount-line">
+                <button type="button" id="unit-sign" class="sign-button" aria-label="Make negative or positive" hidden>±</button>
+                <input id="unit-amount" type="text" inputmode="decimal" autocomplete="off" value="1" aria-label="Amount" />
+              </div>
             </div>
 
             <button type="button" id="unit-swap" class="convert-swap" aria-label="Swap units">⇅</button>
