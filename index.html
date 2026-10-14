@@ -145,8 +145,8 @@
             <button type="button" class="converter-tile" data-converter="time">
               <span class="tile-icon" aria-hidden="true">⏱️</span>Time
             </button>
-            <button type="button" class="converter-tile" data-converter="finance" disabled>
-              <span class="tile-icon" aria-hidden="true">💰</span>Finance<small>Soon</small>
+            <button type="button" class="converter-tile" data-converter="finance">
+              <span class="tile-icon" aria-hidden="true">💰</span>Finance
             </button>
             <button type="button" class="converter-tile" data-converter="data">
               <span class="tile-icon" aria-hidden="true">💾</span>Data
@@ -215,6 +215,51 @@
             </div>
 
             <p id="unit-rate" class="convert-rate"></p>
+          </div>
+
+          <!-- Finance: a loan repayment calculator. finance.js does the maths. -->
+          <div id="finance-view" class="convert" hidden>
+            <div class="convert-row">
+              <label for="loan-amount">Loan amount</label>
+              <input id="loan-amount" type="text" inputmode="decimal" autocomplete="off" value="100000" />
+            </div>
+
+            <div class="field-pair">
+              <div class="convert-row">
+                <label for="loan-rate">Interest (% per year)</label>
+                <input id="loan-rate" class="field-small" type="text" inputmode="decimal" autocomplete="off" value="4" />
+              </div>
+              <div class="convert-row">
+                <label for="loan-years">Term (years)</label>
+                <input id="loan-years" class="field-small" type="text" inputmode="decimal" autocomplete="off" value="30" />
+              </div>
+            </div>
+
+            <div class="convert-row">
+              <label for="loan-method">Repayment type</label>
+              <select id="loan-method">
+                <option value="annuity">Equal monthly payment</option>
+                <option value="principal">Equal principal (gets smaller)</option>
+                <option value="flat">Flat rate (car loan)</option>
+              </select>
+            </div>
+
+            <!-- A description list: each <dt> is a label and the <dd> after it is its value. -->
+            <dl class="results" aria-live="polite">
+              <div class="results-main">
+                <dt id="loan-monthly-label">Monthly payment</dt>
+                <dd id="loan-monthly">–</dd>
+                <dd id="loan-note" class="results-note"></dd>
+              </div>
+              <div>
+                <dt>Total interest</dt>
+                <dd id="loan-interest">–</dd>
+              </div>
+              <div>
+                <dt>Total repayment</dt>
+                <dd id="loan-total">–</dd>
+              </div>
+            </dl>
           </div>
         </section>
 

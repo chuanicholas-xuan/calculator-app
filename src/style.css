@@ -568,3 +568,60 @@ body {
   text-align: center;
   color: var(--muted);
 }
+
+/* ---------- Tools with their own screen (Finance, ...) ---------- */
+/* Two small boxes side by side. */
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.convert input.field-small {
+  font-size: 1.25rem;
+}
+
+/* The answers: one big one on top, smaller ones under it. */
+.results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+}
+
+.results > div {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--key);
+}
+
+.results .results-main {
+  grid-column: 1 / -1; /* spans both columns */
+  text-align: right;
+}
+
+.results dt {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.results dd {
+  margin: 4px 0 0;
+  font-size: 1.1rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.results .results-main dd {
+  font-size: 2rem;
+}
+
+.results .results-main dd.results-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* The panel scrolls if a tool's screen is taller than the calculator. */
+.panel .convert {
+  overflow-y: auto;
+}
