@@ -131,6 +131,20 @@ export const UNIT_CONVERTERS = {
       { code: 'fl oz (UK)', name: 'UK fluid ounce', factor: 0.0284130625 },
     ],
   },
+  // Base unit: metres per second.
+  speed: {
+    title: 'Speed',
+    defaults: ['km/h', 'mph'],
+    units: [
+      { code: 'm/s', name: 'Metres per second', factor: 1 },
+      { code: 'km/h', name: 'Kilometres per hour', factor: 1000 / 3600 },
+      { code: 'mph', name: 'Miles per hour', factor: 0.44704 },
+      { code: 'kn', name: 'Knot', factor: 1852 / 3600 },
+      { code: 'ft/s', name: 'Feet per second', factor: 0.3048 },
+      { code: 'Mach', name: 'Speed of sound (sea level)', factor: 340.3 },
+      { code: 'c', name: 'Speed of light', factor: 299792458 },
+    ],
+  },
 }
 
 const view = document.getElementById('unit-view')
