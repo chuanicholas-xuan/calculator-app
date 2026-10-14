@@ -625,3 +625,25 @@ body {
 .panel .convert {
   overflow-y: auto;
 }
+
+/* A group of boxes that can be shown or hidden together. */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field-group[hidden] {
+  display: none;
+}
+
+/* Make the browser's date picker icon match light or dark themes. */
+.convert input[type="date"] {
+  color-scheme: dark;
+  text-align: left;
+}
+
+[data-theme="bold"] .convert input[type="date"],
+[data-theme="daylight"] .convert input[type="date"] {
+  color-scheme: light;
+}
