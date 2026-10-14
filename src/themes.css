@@ -380,11 +380,11 @@
 
 /* ---------- Converter fixes for themes ---------- */
 /* Dropdown options can't be see-through, so give glass a solid colour. */
-[data-theme="glass"] .currency option {
+[data-theme="glass"] .convert option {
   background: #160f33;
 }
 
 /* Dark text on the blue swap button is hard to read, so use white. */
-[data-theme="daylight"] .currency-swap {
+[data-theme="daylight"] .convert-swap {
   color: #ffffff;
 }

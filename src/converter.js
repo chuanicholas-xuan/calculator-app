@@ -1,6 +1,8 @@
 // ---------- Converter: its own file, because main.js was getting too long ----------
 // main.js imports the two functions at the bottom (isConverterOpen, handleConverterKey).
 // Everything else in here is private to this file.
+// Unit converters (length, ...) live in units.js; this file opens and closes them.
+import { UNIT_CONVERTERS, showUnitView, hideUnitView, isUnitViewOpen } from './units.js'
 
 const panel = document.getElementById('converter')
 const openButton = document.getElementById('converter-open')
@@ -33,7 +35,11 @@ function showHome() {
   title.textContent = 'Converter'
   home.hidden = false
   currencyView.hidden = true
+  hideUnitView()
 }
+
+// True when one converter (Currency, Length, ...) is showing instead of the grid.
+const isInsideConverter = () => !currencyView.hidden || isUnitViewOpen()
 
 function showCurrency() {
   title.textContent = 'Currency'
@@ -47,13 +53,17 @@ openButton.addEventListener('click', openConverter)
 
 // The back arrow goes up one level: from Currency to the grid, from the grid to the calculator.
 closeButton.addEventListener('click', () => {
-  if (!currencyView.hidden) showHome()
+  if (isInsideConverter()) showHome()
   else closeConverter()
 })
 
 home.addEventListener('click', (event) => {
-  const tile = event.target.closest('[data-converter]')
-  if (tile?.dataset.converter === 'currency') showCurrency()
+  const key = event.target.closest('[data-converter]')?.dataset.converter
+  if (key === 'currency') showCurrency()
+  else if (Object.hasOwn(UNIT_CONVERTERS, key)) {
+    home.hidden = true
+    title.textContent = showUnitView(key)
+  }
 })
 
 // ---------- Exchange rates ----------
@@ -277,6 +287,6 @@ export function isConverterOpen() {
 // While the converter is open, main.js passes keys here instead of to the calculator.
 export function handleConverterKey(event) {
   if (event.key !== 'Escape') return
-  if (!currencyView.hidden) showHome()
+  if (isInsideConverter()) showHome()
   else closeConverter()
 }

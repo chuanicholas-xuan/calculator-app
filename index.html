@@ -133,8 +133,8 @@
             <button type="button" class="converter-tile" data-converter="currency">
               <span class="tile-icon" aria-hidden="true">💱</span>Currency
             </button>
-            <button type="button" class="converter-tile" data-converter="length" disabled>
-              <span class="tile-icon" aria-hidden="true">📏</span>Length<small>Soon</small>
+            <button type="button" class="converter-tile" data-converter="length">
+              <span class="tile-icon" aria-hidden="true">📏</span>Length
             </button>
             <button type="button" class="converter-tile" data-converter="mass" disabled>
               <span class="tile-icon" aria-hidden="true">⚖️</span>Mass<small>Soon</small>
@@ -174,24 +174,44 @@
             </button>
           </div>
 
-          <div id="currency-view" class="currency" hidden>
+          <div id="currency-view" class="convert" hidden>
             <!-- label + input pairs: clicking the label focuses the input, and screen readers read it out. -->
-            <div class="currency-row">
+            <div class="convert-row">
               <label for="currency-from">From</label>
               <select id="currency-from"></select>
               <input id="currency-amount" type="text" inputmode="decimal" autocomplete="off" value="1" aria-label="Amount" />
             </div>
 
-            <button type="button" id="currency-swap" class="currency-swap" aria-label="Swap currencies">⇅</button>
+            <button type="button" id="currency-swap" class="convert-swap" aria-label="Swap currencies">⇅</button>
 
-            <div class="currency-row">
+            <div class="convert-row">
               <label for="currency-to">To</label>
               <select id="currency-to"></select>
-              <output id="currency-result" class="currency-result" aria-live="polite">–</output>
+              <output id="currency-result" class="convert-result" aria-live="polite">–</output>
             </div>
 
-            <p id="currency-rate" class="currency-rate"></p>
-            <p id="currency-status" class="currency-status"></p>
+            <p id="currency-rate" class="convert-rate"></p>
+            <p id="currency-status" class="convert-status"></p>
+          </div>
+
+          <!-- One screen shared by every "unit" converter (length now; mass, area... later).
+               units.js fills in the lists for whichever converter was opened. -->
+          <div id="unit-view" class="convert" hidden>
+            <div class="convert-row">
+              <label for="unit-from">From</label>
+              <select id="unit-from"></select>
+              <input id="unit-amount" type="text" inputmode="decimal" autocomplete="off" value="1" aria-label="Amount" />
+            </div>
+
+            <button type="button" id="unit-swap" class="convert-swap" aria-label="Swap units">⇅</button>
+
+            <div class="convert-row">
+              <label for="unit-to">To</label>
+              <select id="unit-to"></select>
+              <output id="unit-result" class="convert-result" aria-live="polite">–</output>
+            </div>
+
+            <p id="unit-rate" class="convert-rate"></p>
           </div>
         </section>
 
