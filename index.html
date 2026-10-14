@@ -169,8 +169,8 @@
             <button type="button" class="converter-tile" data-converter="temperature">
               <span class="tile-icon" aria-hidden="true">🌡️</span>Temperature
             </button>
-            <button type="button" class="converter-tile" data-converter="bmi" disabled>
-              <span class="tile-icon" aria-hidden="true">🩺</span>BMI<small>Soon</small>
+            <button type="button" class="converter-tile" data-converter="bmi">
+              <span class="tile-icon" aria-hidden="true">🩺</span>BMI
             </button>
           </div>
 
@@ -375,6 +375,69 @@
                 <dd id="numeral-16">–</dd>
               </div>
             </dl>
+          </div>
+
+          <!-- BMI: body mass index from weight and height. bmi.js does the maths. -->
+          <div id="bmi-view" class="convert" hidden>
+            <div class="field-pair">
+              <div class="convert-row">
+                <label for="bmi-units">Units</label>
+                <select id="bmi-units">
+                  <option value="metric">kg, cm</option>
+                  <option value="imperial">lb, ft/in</option>
+                </select>
+              </div>
+              <div class="convert-row">
+                <label for="bmi-scale">Categories</label>
+                <select id="bmi-scale">
+                  <option value="who">International (WHO)</option>
+                  <option value="asian">Asian</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="bmi-metric-fields" class="field-group">
+              <div class="field-pair">
+                <div class="convert-row">
+                  <label for="bmi-kg">Weight (kg)</label>
+                  <input id="bmi-kg" class="field-small" type="text" inputmode="decimal" autocomplete="off" value="70" />
+                </div>
+                <div class="convert-row">
+                  <label for="bmi-cm">Height (cm)</label>
+                  <input id="bmi-cm" class="field-small" type="text" inputmode="decimal" autocomplete="off" value="175" />
+                </div>
+              </div>
+            </div>
+
+            <div id="bmi-imperial-fields" class="field-group" hidden>
+              <div class="convert-row">
+                <label for="bmi-lb">Weight (lb)</label>
+                <input id="bmi-lb" class="field-small" type="text" inputmode="decimal" autocomplete="off" />
+              </div>
+              <div class="field-pair">
+                <div class="convert-row">
+                  <label for="bmi-ft">Height (ft)</label>
+                  <input id="bmi-ft" class="field-small" type="text" inputmode="decimal" autocomplete="off" />
+                </div>
+                <div class="convert-row">
+                  <label for="bmi-in">(in)</label>
+                  <input id="bmi-in" class="field-small" type="text" inputmode="decimal" autocomplete="off" />
+                </div>
+              </div>
+            </div>
+
+            <dl class="results" aria-live="polite">
+              <div class="results-main">
+                <dt>BMI</dt>
+                <dd id="bmi-value">–</dd>
+                <dd id="bmi-category" class="results-note"></dd>
+              </div>
+              <div class="results-wide">
+                <dt>Healthy weight for this height</dt>
+                <dd id="bmi-range">–</dd>
+              </div>
+            </dl>
+            <p class="convert-status">BMI is a rough guide for adults. It doesn't tell muscle from fat, so check with a doctor before acting on it.</p>
           </div>
         </section>
 
