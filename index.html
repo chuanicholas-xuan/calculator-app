@@ -9,6 +9,17 @@
   <body>
     <div id="app">
       <main class="calculator">
+        <div class="toolbar">
+          <button type="button" id="history-open" class="icon-button" aria-label="Show history">
+            <!-- A clock with an arrow around it: the usual "history" icon. -->
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M12 7v5l3 2" />
+            </svg>
+          </button>
+        </div>
+
         <!-- The screen: the sum on top, the answer below. aria-live makes screen readers announce changes. -->
         <div id="display" class="display" aria-live="polite">
           <div id="expression" class="expression">0</div>
@@ -41,6 +52,29 @@
           <button type="button" data-action="decimal">.</button>
           <button type="button" data-action="delete" aria-label="delete">⌫</button>
         </div>
+
+        <!-- The history screen. "hidden" keeps it out of sight until the clock button is pressed. -->
+        <section id="history" class="history" aria-labelledby="history-title" hidden>
+          <header class="history-header">
+            <button type="button" id="history-close" class="icon-button" aria-label="Back to calculator">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 12H5" />
+                <path d="M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h2 id="history-title">History</h2>
+            <button type="button" id="history-clear" class="icon-button" aria-label="Clear history">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 6h18" />
+                <path d="M8 6V4h8v2" />
+                <path d="M6 6l1 14h10l1-14" />
+                <path d="M10 10v6" />
+                <path d="M14 10v6" />
+              </svg>
+            </button>
+          </header>
+          <div id="history-list" class="history-list"></div>
+        </section>
       </main>
     </div>
     <script type="module" src="/src/main.js"></script>
