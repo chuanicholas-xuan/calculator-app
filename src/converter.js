@@ -6,10 +6,11 @@ import { UNIT_CONVERTERS, showUnitView, hideUnitView, isUnitViewOpen } from './u
 import { finance } from './finance.js'
 import { date } from './date.js'
 import { discount } from './discount.js'
+import { numeral } from './numeral.js'
 
 // Converters with their own screen (not just "pick two units"). Each one gives
 // { title, view, open() }, so this file can show and hide them all the same way.
-const TOOLS = { finance, date, discount }
+const TOOLS = { finance, date, discount, numeral }
 
 const panel = document.getElementById('converter')
 const openButton = document.getElementById('converter-open')
