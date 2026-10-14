@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BackIcon } from './icons.jsx'
 import CurrencyConverter from './converters/CurrencyConverter.jsx'
 import UnitConverter from './converters/UnitConverter.jsx'
+import FinanceConverter from './converters/FinanceConverter.jsx'
 import { UNIT_CONVERTERS } from '../core/units.js'
 
 // The tiles on the converter's home grid, in the same order as the phone's screen.
@@ -26,6 +27,7 @@ const TILES = [
 // Every unit converter (length, mass, ...) uses the same UnitConverter screen.
 const SCREENS = {
   currency: CurrencyConverter,
+  finance: FinanceConverter,
   ...Object.fromEntries(Object.keys(UNIT_CONVERTERS).map((kind) => [kind, UnitConverter])),
 }
 
