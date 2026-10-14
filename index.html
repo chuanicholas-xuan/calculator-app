@@ -154,8 +154,8 @@
             <button type="button" class="converter-tile" data-converter="date">
               <span class="tile-icon" aria-hidden="true">📅</span>Date
             </button>
-            <button type="button" class="converter-tile" data-converter="discount" disabled>
-              <span class="tile-icon" aria-hidden="true">🏷️</span>Discount<small>Soon</small>
+            <button type="button" class="converter-tile" data-converter="discount">
+              <span class="tile-icon" aria-hidden="true">🏷️</span>Discount
             </button>
             <button type="button" class="converter-tile" data-converter="volume">
               <span class="tile-icon" aria-hidden="true">🧊</span>Volume
@@ -305,6 +305,37 @@
                 <dt id="date-main-label">Days between</dt>
                 <dd id="date-main">–</dd>
                 <dd id="date-detail" class="results-note"></dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Discount: sale price and savings. discount.js does the maths. -->
+          <div id="discount-view" class="convert" hidden>
+            <div class="convert-row">
+              <label for="discount-price">Original price</label>
+              <input id="discount-price" type="text" inputmode="decimal" autocomplete="off" value="100" />
+            </div>
+
+            <div class="field-pair">
+              <div class="convert-row">
+                <label for="discount-percent">Discount (% off)</label>
+                <input id="discount-percent" class="field-small" type="text" inputmode="decimal" autocomplete="off" value="20" />
+              </div>
+              <div class="convert-row">
+                <label for="discount-extra">Extra % off</label>
+                <input id="discount-extra" class="field-small" type="text" inputmode="decimal" autocomplete="off" placeholder="0" />
+              </div>
+            </div>
+
+            <dl class="results" aria-live="polite">
+              <div class="results-main">
+                <dt>Final price</dt>
+                <dd id="discount-final">–</dd>
+                <dd id="discount-note" class="results-note"></dd>
+              </div>
+              <div>
+                <dt>You save</dt>
+                <dd id="discount-saved">–</dd>
               </div>
             </dl>
           </div>
