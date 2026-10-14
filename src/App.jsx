@@ -8,8 +8,9 @@ import ScienceKeys from './components/ScienceKeys.jsx'
 import Keypad from './components/Keypad.jsx'
 import HistoryPanel from './components/HistoryPanel.jsx'
 import SettingsPanel from './components/SettingsPanel.jsx'
+import ConverterPanel from './components/ConverterPanel.jsx'
 import { keyId } from './components/Key.jsx'
-import { HistoryIcon, SettingsIcon } from './components/icons.jsx'
+import { ConvertIcon, HistoryIcon, SettingsIcon } from './components/icons.jsx'
 
 // Remember whether scientific mode was on, so a refresh doesn't switch it off.
 const MODE_KEY = 'calculator-mode'
@@ -29,7 +30,7 @@ export default function App() {
   const [pressed, setPressed] = useState(null) // which button to light up after a key press
   const [history, setHistory] = useState(loadHistory) // newest first
   const [theme, setTheme] = useState(loadTheme)
-  const [panel, setPanel] = useState(null) // which screen covers the calculator: null, 'history' or 'settings'
+  const [panel, setPanel] = useState(null) // which screen covers the calculator: null, 'history', 'settings' or 'converter'
   const opener = useRef(null) // a "ref" remembers the button that opened a panel, to give it focus back
 
   const press = (action, value) => dispatch({ action, value })
@@ -70,8 +71,9 @@ export default function App() {
       if (event.ctrlKey || event.metaKey || event.altKey) return // leave shortcuts like Ctrl+C alone
 
       // While a panel is open, number keys must not type into the hidden calculator.
+      // (The converter handles its own Escape, because it has screens inside it.)
       if (panel) {
-        if (event.key === 'Escape') closePanel()
+        if (event.key === 'Escape' && panel !== 'converter') closePanel()
         return
       }
       const mapped = keyToAction(event.key)
@@ -115,6 +117,15 @@ export default function App() {
         >
           <SettingsIcon />
         </button>
+        <button
+          type="button"
+          id="converter-open"
+          className="icon-button"
+          aria-label="Converter"
+          onClick={(event) => openPanel('converter', event)}
+        >
+          <ConvertIcon />
+        </button>
         {/* aria-pressed tells screen readers whether scientific mode is on. */}
         <button
           type="button"
@@ -147,6 +158,7 @@ export default function App() {
         />
       )}
       {panel === 'settings' && <SettingsPanel theme={theme} onPickTheme={setTheme} onClose={closePanel} />}
+      {panel === 'converter' && <ConverterPanel onClose={closePanel} />}
     </main>
   )
 }
