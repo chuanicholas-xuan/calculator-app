@@ -17,6 +17,7 @@ export const initialState = {
   result: '', // the answer shown after =
   angleUnit: 'deg', // sin, cos and tan read their number as degrees or radians
   second: false, // the "2nd" key swaps some buttons to their opposite (sin -> sin⁻¹)
+  saved: null, // set by = to { expression, result } when the sum is worth keeping in History
 }
 
 // Every kind of token the sum can contain.
@@ -298,6 +299,13 @@ function equals(s) {
 
   s.result = format(evaluate(s.tokens, s.angleUnit))
   s.justEvaluated = true
+
+  // Only real sums go in the history: "5 =" or a sum that ended in Error is not worth keeping.
+  // The reducer can't save anything itself (it must only return the new state),
+  // so it leaves a note in "saved" and App.jsx does the saving.
+  if ((s.tokens.length > 1 || isPercent(s.tokens[0])) && s.result !== 'Error') {
+    s.saved = { expression: expressionText(s), result: s.result }
+  }
 }
 
 // Backspace: remove one character of a number, or one whole token (like "sin(").
@@ -324,6 +332,14 @@ function percent(s) {
   if (isNumber(last)) setLastToken(s, last + '%')
 }
 
+// Tapping an old answer in History brings it back so you can keep calculating with it.
+function reuseAnswer(s, answer) {
+  if (!Number.isFinite(Number(answer))) return
+  s.tokens = [answer]
+  s.justEvaluated = false
+  s.result = ''
+}
+
 function reset(s) {
   s.tokens = []
   s.justEvaluated = false
@@ -334,7 +350,7 @@ function reset(s) {
 // React calls this with the current state and what was pressed, and uses whatever comes back.
 export function calculatorReducer(state, { action, value }) {
   // A copy, so the old state is never changed. React only redraws when it gets a NEW object.
-  const s = { ...state, tokens: [...state.tokens] }
+  const s = { ...state, tokens: [...state.tokens], saved: null }
 
   if (action === 'digit') inputDigit(s, value)
   else if (action === 'decimal') inputDecimal(s)
@@ -348,6 +364,7 @@ export function calculatorReducer(state, { action, value }) {
   else if (action === 'constant') inputConstant(s, value)
   else if (action === 'postfix') inputPostfix(s, value)
   else if (action === 'second') s.second = !s.second
+  else if (action === 'use-answer') reuseAnswer(s, value)
   else if (action === 'angle') s.angleUnit = s.angleUnit === 'deg' ? 'rad' : 'deg'
   else return state // unknown action: nothing changes
 
