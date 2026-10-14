@@ -3,6 +3,11 @@
 // Everything else in here is private to this file.
 // Unit converters (length, ...) live in units.js; this file opens and closes them.
 import { UNIT_CONVERTERS, showUnitView, hideUnitView, isUnitViewOpen } from './units.js'
+import { finance } from './finance.js'
+
+// Converters with their own screen (not just "pick two units"). Each one gives
+// { title, view, open() }, so this file can show and hide them all the same way.
+const TOOLS = { finance }
 
 const panel = document.getElementById('converter')
 const openButton = document.getElementById('converter-open')
@@ -36,10 +41,12 @@ function showHome() {
   home.hidden = false
   currencyView.hidden = true
   hideUnitView()
+  for (const tool of Object.values(TOOLS)) tool.view.hidden = true
 }
 
 // True when one converter (Currency, Length, ...) is showing instead of the grid.
-const isInsideConverter = () => !currencyView.hidden || isUnitViewOpen()
+const isInsideConverter = () =>
+  !currencyView.hidden || isUnitViewOpen() || Object.values(TOOLS).some((tool) => !tool.view.hidden)
 
 function showCurrency() {
   title.textContent = 'Currency'
@@ -63,6 +70,10 @@ home.addEventListener('click', (event) => {
   else if (Object.hasOwn(UNIT_CONVERTERS, key)) {
     home.hidden = true
     title.textContent = showUnitView(key)
+  } else if (Object.hasOwn(TOOLS, key)) {
+    home.hidden = true
+    title.textContent = TOOLS[key].title
+    TOOLS[key].open()
   }
 })
 
