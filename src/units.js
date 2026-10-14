@@ -66,6 +66,24 @@ export const UNIT_CONVERTERS = {
       { code: 'in²', name: 'Square inch', factor: 0.00064516 },
     ],
   },
+  // Base unit: the second. A year is 365.25 days (the average, counting leap years).
+  time: {
+    title: 'Time',
+    defaults: ['h', 'min'],
+    units: [
+      { code: 'century', name: 'Century', factor: 3155760000 },
+      { code: 'yr', name: 'Year', factor: 31557600 },
+      { code: 'mo', name: 'Month (average)', factor: 2629800 },
+      { code: 'wk', name: 'Week', factor: 604800 },
+      { code: 'd', name: 'Day', factor: 86400 },
+      { code: 'h', name: 'Hour', factor: 3600 },
+      { code: 'min', name: 'Minute', factor: 60 },
+      { code: 's', name: 'Second', factor: 1 },
+      { code: 'ms', name: 'Millisecond', factor: 0.001 },
+      { code: 'µs', name: 'Microsecond', factor: 1e-6 },
+      { code: 'ns', name: 'Nanosecond', factor: 1e-9 },
+    ],
+  },
 }
 
 const view = document.getElementById('unit-view')
