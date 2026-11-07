@@ -47,9 +47,19 @@ You need Node 22 or newer.
 npm install
 npm run dev      # start a local server with live reload
 npm run build    # make the production build in dist/
+npm test         # run the automated tests once
+npm run test:watch  # rerun the tests every time you save
 ```
+
+## Tests
+
+The logic in `src/core/` is tested with [Vitest](https://vitest.dev). Each `*.test.js` file sits next to the file it tests:
+
+- `calculator.test.js`: the maths rules (order of operations, brackets, trig, percent) and button presses
+- `units.test.js`: the unit converters, including temperature
+- `tools.test.js`: finance, date, discount, numeral system and BMI
 
 ## Roadmap
 
-- Automated tests in the repo
+- Tests for the React screens
 - A mobile app with React Native, reusing `src/core/`
